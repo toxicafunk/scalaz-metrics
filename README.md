@@ -17,47 +17,47 @@ Scalaz Metric is a principled functional programming library to measure the beha
 * Can be used in Scala REPLs
 
 ## Competitors
-[Metrics Scala](https://github.com/erikvanoosten/metrics-scala)
-Type safe, pure FP: ✘ 
-Comprehensive: ✔
-Scala: ✔
-Notes:
+[Metrics Scala](https://github.com/erikvanoosten/metrics-scala)  
+Type safe, pure FP: ✘  
+Comprehensive: ✔  
+Scala: ✔  
+Notes:  
+  
+[Scala Metrics](https://github.com/PagerDuty/scala-metrics)  
+Type safe, pure FP: ✘  
+Comprehensive: ✔  
+Scala: ✔  
+Notes:  
 
-[Scala Metrics](https://github.com/PagerDuty/scala-metrics)
-Type safe, pure FP: ✘ 
-Comprehensive: ✔
-Scala: ✔
-Notes:
-
-[JAJMX](https://github.com/dacr/jajmx)
-Type safe, pure FP: ✘ (but very FP oriented)
-Comprehensive: ✔
-Scala: ✔
-Notes:
-
-[SSE-JMX](https://github.com/sptz45/sse-jmx)
-Type safe, pure FP: ✘ 
-Comprehensive: ✔
-Scala: ✔
-Notes:
-
-[Metrics Datadog](https://github.com/coursera/metrics-datadog)
-Type safe, pure FP: ✘ 
-Comprehensive: ✔
-Scala: ✘ (Java)
-Notes:
-
-[ekg: Remote monitoring of processes](https://hackage.haskell.org/package/ekg)
-Type safe, pure FP: ✔ 
-Comprehensive: ✔
-Scala: ✘ (Haskell)
-Notes: [Monad Metrics](https://github.com/parsonsmatt/monad-metrics/blob/17546b92b4e7e94279b81afe76fd6daa5f3ff0f8/src/Control/Monad/Metrics/Internal.hs) a wrapper and API for using EKG metrics
-
+[JAJMX](https://github.com/dacr/jajmx)  
+Type safe, pure FP: ✘ (but very FP oriented)  
+Comprehensive: ✔  
+Scala: ✔  
+Notes:  
+  
+[SSE-JMX](https://github.com/sptz45/sse-jmx)  
+Type safe, pure FP: ✘  
+Comprehensive: ✔  
+Scala: ✔  
+Notes:  
+  
+[Metrics Datadog](https://github.com/coursera/metrics-datadog)  
+Type safe, pure FP: ✘  
+Comprehensive: ✔  
+Scala: ✘ (Java)  
+Notes:  
+  
+[ekg: Remote monitoring of processes](https://hackage.haskell.org/package/ekg)  
+Type safe, pure FP: ✔  
+Comprehensive: ✔  
+Scala: ✘ (Haskell)  
+Notes: [Monad Metrics](https://github.com/parsonsmatt/monad-metrics/blob/17546b92b4e7e94279b81afe76fd6daa5f3ff0f8/src/Control/Monad/Metrics/Internal.hs) a wrapper and API for using EKG metrics  
+  
 
 ## Background
-[Optimizing Tagless Final – Saying farewell to Free](https://typelevel.org/blog/2017/12/27/optimizing-final-tagless.html)
-
-[Tagless Final algebras and Streaming](https://typelevel.org/blog/2018/05/09/tagless-final-streaming.html)
+[Optimizing Tagless Final – Saying farewell to Free](https://typelevel.org/blog/2017/12/27/optimizing-final-tagless.html)  
+  
+[Tagless Final algebras and Streaming](https://typelevel.org/blog/2018/05/09/tagless-final-streaming.html)  
 
 ## Notes
-[Dropwizard and Cats Gist](https://gist.github.com/Daenyth/7795133b3471da32d3121fcf30994484)
+[Dropwizard and Cats Gist](https://gist.github.com/Daenyth/7795133b3471da32d3121fcf30994484)  
