@@ -29,7 +29,7 @@ Comprehensive: ✔
 Scala: ✔  
 Notes:  
 
-[Kamon](http://kamon.io/documentation/1.x/core/basics/metrics/)
+[Kamon](http://kamon.io/documentation/1.x/core/basics/metrics/)  
 Type safe, pure FP: ✘  
 Comprehensive: ✔  
 Scala: ✔  
