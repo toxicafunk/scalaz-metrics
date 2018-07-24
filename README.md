@@ -8,13 +8,14 @@ A high-performance, purely-functional library for adding instrumentation to any 
 ## Introduction and Highlights
 Scalaz Metric is a principled functional programming library to measure the behavior of your application. It focuses on provideing metrics and health checks in a performant purely functional manner.
 
-
 * Comprehensive and consistent
 * Type safe, purely-functional
 * Pluggable effect monads
 * Asynchronous and non-blocking
 * Supports streaming
 * Can be used in Scala REPLs
+
+If it can affect your code's business value, add a metric. -- Coda Hale
 
 ## Competitors
 [Metrics Scala](https://github.com/erikvanoosten/metrics-scala)  
@@ -65,7 +66,12 @@ Comprehensive: ✔
 Scala: ✘ (Haskell)  
 Notes:  
 
-  
+[Metrics](https://github.com/codahale/metrics)
+Type safe, pure FP: ✘  
+Comprehensive: ✔  
+Scala: ✘ (Go)  
+Notes: [Haskell implementation](https://hackage.haskell.org/package/metrics), [Metrics, Metrics, Everywhere - Coda Hale](https://www.youtube.com/watch?v=czes-oa0yik)  
+
 
 ## Background
 [Optimizing Tagless Final – Saying farewell to Free](https://typelevel.org/blog/2017/12/27/optimizing-final-tagless.html)  
