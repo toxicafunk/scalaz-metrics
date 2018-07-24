@@ -15,7 +15,10 @@ Scalaz Metric is a principled functional programming library to measure the beha
 * Supports streaming
 * Can be used in Scala REPLs
 
-If it can affect your code's business value, add a metric. -- Coda Hale
+If it can affect your code's business value, measure it. -- Coda Hale
+
+In order to know how well our *code* is generating *business value*, we need *metrics* -- also Coda Hale
+
 
 ## Competitors
 [Metrics Scala](https://github.com/erikvanoosten/metrics-scala)  
