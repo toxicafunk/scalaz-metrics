@@ -58,6 +58,13 @@ Type safe, pure FP: ✔
 Comprehensive: ✔  
 Scala: ✘ (Haskell)  
 Notes: [Monad Metrics](https://github.com/parsonsmatt/monad-metrics/blob/17546b92b4e7e94279b81afe76fd6daa5f3ff0f8/src/Control/Monad/Metrics/Internal.hs) a wrapper and API for using EKG metrics  
+
+[prometheus: Prometheus Haskell Client](https://hackage.haskell.org/package/prometheus)  
+Type safe, pure FP: ✔  
+Comprehensive: ✔  
+Scala: ✘ (Haskell)  
+Notes:  
+
   
 
 ## Background
