@@ -26,9 +26,9 @@ class Label[A] (val labels: Array[A]){
 
 trait Metrics[C[_], F[_], L] {
 
-  def counter(label: L): F[Long => F[Unit]]
+  def counter(label: Label[L]): F[Long => F[Unit]]
 
-  def gague[A: Semigroup: C](label: L)(io: F[A]): F[Unit]
+  def gague[A: Semigroup: C](label: Label[L])(io: F[A]): F[Unit]
 
   def histogram[A: Order: C](
     label: L, 
