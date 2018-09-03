@@ -35,4 +35,13 @@ libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-zio" % "0.1-SNAPSHOT"
 )
 
+libraryDependencies ++= Seq(
+  "io.dropwizard.metrics" % "metrics-core" % "4.0.1",
+  "io.dropwizard.metrics" % "metrics-healthchecks" % "4.0.1"
+)
+
 resolvers += Resolver.sonatypeRepo("snapshots")
+
+resolvers += Resolver.sonatypeRepo("releases")
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7")

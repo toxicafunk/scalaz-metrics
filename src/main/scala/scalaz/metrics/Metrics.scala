@@ -1,5 +1,7 @@
 package scalaz.metrics
-import scalaz.{Order, Semigroup}
+
+//import javax.management.openmbean.OpenType
+import scalaz.{Order, Semigroup, Show}
 
 sealed trait Resevoir[+A]
 object Resevoir {
@@ -12,10 +14,18 @@ trait Timer[F[_]] {
 }
 
 trait HtmlRender[A] {
-  def render(a: A): String 
+  def render(a: A): String
+}
+
+class Label[A] (val labels: Array[A]){
+
+  def apply(arr: Array[A]) = new Label(arr)
+
+  val toMetricName = labels.foldLeft("")( (b, a) => b ++ a.toString())
 }
 
 trait Metrics[C[_], F[_], L] {
+
   def counter(label: L): F[Long => F[Unit]]
 
   def gague[A: Semigroup: C](label: L)(io: F[A]): F[Unit]
