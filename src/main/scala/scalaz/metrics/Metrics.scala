@@ -2,6 +2,7 @@ package scalaz.metrics
 
 //import javax.management.openmbean.OpenType
 import scalaz.{Order, Semigroup, Show}
+import scalaz.syntax.show._
 
 sealed trait Resevoir[+A]
 object Resevoir {
@@ -17,28 +18,33 @@ trait HtmlRender[A] {
   def render(a: A): String
 }
 
-class Label[A] (val labels: Array[A]){
+class Label[A: Show] (val labels: Array[A])
+  //val toMetricName = labels.foldLeft("")( (b, a) => b ++ Show[A].shows(a) )
 
-  def apply(arr: Array[A]) = new Label(arr)
+object Label {
+  def apply[A: Show](arr: Array[A]) = new Label(arr)
 
-  val toMetricName = labels.foldLeft("")( (b, a) => b ++ a.toString())
+  implicit def showInstance[A: Show] = new Show[Label[A]] {
+    override def shows(l: Label[A]): String =
+      l.labels.foldLeft("")( (b,a) => b ++ a.shows)
+  }
 }
 
-trait Metrics[C[_], F[_], L] {
+trait Metrics[C[_], F[_]] {
 
-  def counter(label: Label[L]): F[Long => F[Unit]]
+  def counter[L: Show](label: Label[L]): F[Long => F[Unit]]
 
-  def gague[A: Semigroup: C](label: Label[L])(io: F[A]): F[Unit]
+  def gauge[A: Semigroup: C, L: Show](label: Label[L])(io: F[A]): F[Unit]
 
-  def histogram[A: Order: C](
-    label: L, 
+  def histogram[A: Order: C, L: Show](
+    label: Label[L], 
     res  : Resevoir[A] = Resevoir.Uniform): F[A => F[Unit]]
 
-  def timer(label: L): F[Timer[F]]
+  def timer[L: Show](label: Label[L]): F[Timer[F]]
 
-  def meter(label: L): F[Double => F[Unit]]
+  def meter[L: Show](label: Label[L]): F[Double => F[Unit]]
 
-  def contramap[L0](f: L0 => L): Metrics[C, F, L] = ???
+  def contramap[L0,L: Show](f: L0 => L): Metrics[C, F] = ???
 }
 
 /* object Main {
