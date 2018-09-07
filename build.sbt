@@ -40,10 +40,12 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics" % "metrics-healthchecks" % "4.0.1"
 )
 
+//scalacOptions := Seq(" -P:scalaz:-polyopt")
+
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 resolvers += Resolver.sonatypeRepo("releases")
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7")
 
-addCompilerPlugin("org.scalaz" % "scalaz-plugin_2.12.4" % "0.0.3")
+//addCompilerPlugin("org.scalaz" % "scalaz-plugin_2.12.4" % "0.0.3")

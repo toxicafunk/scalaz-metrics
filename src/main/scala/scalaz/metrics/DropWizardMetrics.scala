@@ -1,11 +1,23 @@
 package scalaz.metrics
 
-import scalaz.zio.IO
-import scalaz.{Semigroup, Show}
-import com.codahale.metrics.{DerivativeGauge, Gauge, MetricRegistry}
+import com.codahale.metrics.{Gauge, MetricRegistry}
 import scalaz.metrics.Label._
+import scalaz.zio.IO
+import scalaz.{Order, Semigroup, Show}
 
-trait DropwizardMetrics[C[_]] extends Metrics[C, IO[Nothing, ?]] {
+class IOTimer extends Timer[IO[Nothing, ?]] {
+  override def apply[A](io: IO[Nothing, A]): IO[Nothing, A] = io
+}
+
+object IOTimer {
+  def apply[A](io: IO[Nothing, A]): IOTimer = {
+    val t = new IOTimer()
+    t.apply(io)
+    t
+  }
+}
+
+class DropwizardMetrics[C[_]] extends Metrics[C, IO[Nothing, ?]] {
 
   val registry: MetricRegistry = new MetricRegistry()
 
@@ -17,19 +29,34 @@ trait DropwizardMetrics[C[_]] extends Metrics[C, IO[Nothing, ?]] {
       }
     )
 
-  def gauge[A: Semigroup: C, L: Show](label: Label[L])(io: IO[Nothing, A]): IO[Nothing, Unit] = {
+  override def gauge[A: Semigroup: C, L: Show](label: Label[L])(io: IO[Nothing, A]): IO[Nothing, Unit] = {
     val lbl = Show[Label[L]].shows(label)
-    IO.point(registry.register(lbl, new Gauge[A] {
-      override def getValue: A = {
-        IO.absolve(io.attempt) match {
-          case a: A => a
-        }
-      }
-    }))
+    io.map(a => {
+      registry.register(lbl, new Gauge[A]() {
+        override def getValue: A = a
+      })
+    }).toUnit
   }
 
-  /*def timer[L: Show](label: Label[L]): IO[Nothing, Timer[IO]] = {
+  override def timer[L: Show](label: Label[L]): IO[Nothing, Timer[IO[Nothing, ?]]] = {
     val lbl = Show[Label[L]].shows(label)
-    IO.point(registry.timer(lbl).time())
-  }*/
+    val ctx = IO.point(registry.timer(lbl).time())
+    val t = IOTimer(ctx)
+    IO.point(t)
+  }
+
+  override def histogram[A: Order: C, L: Show](label: Label[L], res: Resevoir[A])
+                                              (implicit num: Numeric[A]):
+    IO[Nothing, A => IO[Nothing, Unit]] = {
+    val lbl = Show[Label[L]].shows(label)
+    IO.point((a: A) => IO.point(registry.histogram(lbl).update(num.toLong(a))))
+  }
+
+
+  override def meter[L: Show](label: Label[L]):
+    IO[Nothing, Double => IO[Nothing, Unit]] = {
+    val lbl = Show[Label[L]].shows(label)
+    IO.point(d => IO.point(registry.meter(lbl).mark(d.toLong)))
+  }
+
 }

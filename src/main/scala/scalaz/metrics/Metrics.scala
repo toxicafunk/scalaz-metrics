@@ -1,8 +1,8 @@
 package scalaz.metrics
 
 //import javax.management.openmbean.OpenType
-import scalaz.{Order, Semigroup, Show}
 import scalaz.syntax.show._
+import scalaz.{Order, Semigroup, Show}
 
 sealed trait Resevoir[+A]
 object Resevoir {
@@ -19,7 +19,6 @@ trait HtmlRender[A] {
 }
 
 class Label[A: Show] (val labels: Array[A])
-  //val toMetricName = labels.foldLeft("")( (b, a) => b ++ Show[A].shows(a) )
 
 object Label {
   def apply[A: Show](arr: Array[A]) = new Label(arr)
@@ -38,7 +37,8 @@ trait Metrics[C[_], F[_]] {
 
   def histogram[A: Order: C, L: Show](
     label: Label[L], 
-    res  : Resevoir[A] = Resevoir.Uniform): F[A => F[Unit]]
+    res  : Resevoir[A] = Resevoir.Uniform)(implicit num: Numeric[A]):
+  F[A => F[Unit]]
 
   def timer[L: Show](label: Label[L]): F[Timer[F]]
 
