@@ -19,6 +19,5 @@ package scalaz.metrics
   CompositeData.class.getName(),
   TabularData.class.getName() }
  **/
-
 sealed trait Measurable
 final case class VoidZM() extends Measurable

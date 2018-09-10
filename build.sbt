@@ -32,11 +32,11 @@ lazy val root =
 
 libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core" % "7.2.25",
-  "org.scalaz" %% "scalaz-zio" % "0.1-SNAPSHOT"
+  "org.scalaz" %% "scalaz-zio"  % "0.1-SNAPSHOT"
 )
 
 libraryDependencies ++= Seq(
-  "io.dropwizard.metrics" % "metrics-core" % "4.0.1",
+  "io.dropwizard.metrics" % "metrics-core"         % "4.0.1",
   "io.dropwizard.metrics" % "metrics-healthchecks" % "4.0.1"
 )
 
