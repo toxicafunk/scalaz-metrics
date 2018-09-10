@@ -40,6 +40,12 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics" % "metrics-healthchecks" % "4.0.1"
 )
 
+libraryDependencies ++= Seq(
+  "org.specs2" %% "specs2-core"          % "4.2.0" % Test,
+  "org.specs2" %% "specs2-scalacheck"    % "4.2.0" % Test,
+  "org.specs2" %% "specs2-matcher-extra" % "4.2.0" % Test
+)
+
 //scalacOptions := Seq(" -P:scalaz:-polyopt")
 
 resolvers += Resolver.sonatypeRepo("snapshots")

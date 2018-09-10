@@ -10,6 +10,7 @@ class IOTimer extends Timer[IO[Nothing, ?]] {
 }
 
 object IOTimer {
+
   def apply[A](io: IO[Nothing, A]): IOTimer = {
     val t = new IOTimer()
     t.apply(io)
@@ -17,7 +18,7 @@ object IOTimer {
   }
 }
 
-class DropwizardMetrics[C[_]] extends Metrics[C, IO[Nothing, ?]] {
+class DropwizardMetrics extends Metrics[IO[Nothing, ?]] {
 
   val registry: MetricRegistry = new MetricRegistry()
 
@@ -29,9 +30,11 @@ class DropwizardMetrics[C[_]] extends Metrics[C, IO[Nothing, ?]] {
       }
     )
 
-  override def gauge[A: Semigroup: C, L: Show](
+  override def gauge[A: Semigroup, L: Show](
     label: Label[L]
-  )(io: IO[Nothing, A]): IO[Nothing, Unit] = {
+  )(
+    io: IO[Nothing, A]
+  ): IO[Nothing, Unit] = {
     val lbl = Show[Label[L]].shows(label)
     io.map(a => {
         registry.register(lbl, new Gauge[A]() {
@@ -48,8 +51,11 @@ class DropwizardMetrics[C[_]] extends Metrics[C, IO[Nothing, ?]] {
     IO.point(t)
   }
 
-  override def histogram[A: Order: C, L: Show](label: Label[L], res: Resevoir[A])(
-    implicit num: Numeric[A]
+  override def histogram[A: Order, L: Show](
+    label: Label[L],
+    res: Resevoir[A]
+  )(implicit
+    num: Numeric[A]
   ): IO[Nothing, A => IO[Nothing, Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     IO.point((a: A) => IO.point(registry.histogram(lbl).update(num.toLong(a))))

@@ -5,6 +5,7 @@ import scalaz.syntax.show._
 import scalaz.{ Order, Semigroup, Show }
 
 sealed trait Resevoir[+A]
+
 object Resevoir {
   case object Uniform                       extends Resevoir[Nothing]
   case class Bounded[A](lower: A, upper: A) extends Resevoir[A]
@@ -29,21 +30,24 @@ object Label {
   }
 }
 
-trait Metrics[C[_], F[_]] {
+trait Metrics[F[_]] {
 
   def counter[L: Show](label: Label[L]): F[Long => F[Unit]]
 
-  def gauge[A: Semigroup: C, L: Show](label: Label[L])(io: F[A]): F[Unit]
+  def gauge[A: Semigroup, L: Show](label: Label[L])(io: F[A]): F[Unit]
 
-  def histogram[A: Order: C, L: Show](label: Label[L], res: Resevoir[A] = Resevoir.Uniform)(
-    implicit num: Numeric[A]
+  def histogram[A: Order, L: Show](
+    label: Label[L],
+    res: Resevoir[A] = Resevoir.Uniform
+  )(implicit
+    num: Numeric[A]
   ): F[A => F[Unit]]
 
   def timer[L: Show](label: Label[L]): F[Timer[F]]
 
   def meter[L: Show](label: Label[L]): F[Double => F[Unit]]
 
-  def contramap[L0, L: Show](f: L0 => L): Metrics[C, F] = ???
+  def contramap[L0, L: Show](f: L0 => L): Metrics[F] = ???
 }
 
 /* object Main {
