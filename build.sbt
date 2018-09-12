@@ -32,7 +32,7 @@ lazy val root =
 
 libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core" % "7.2.25",
-  "org.scalaz" %% "scalaz-zio"  % "0.1-SNAPSHOT"
+  "org.scalaz" %% "scalaz-zio"  % "0.2.7"
 )
 
 libraryDependencies ++= Seq(
@@ -40,11 +40,8 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics" % "metrics-healthchecks" % "4.0.1"
 )
 
-libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2-core"          % "4.2.0" % Test,
-  "org.specs2" %% "specs2-scalacheck"    % "4.2.0" % Test,
-  "org.specs2" %% "specs2-matcher-extra" % "4.2.0" % Test
-)
+libraryDependencies += "org.scalaz" %% "testz-core" % "0.0.5"
+libraryDependencies += "org.scalaz" %% "testz-stdlib" % "0.0.5"
 
 //scalacOptions := Seq(" -P:scalaz:-polyopt")
 

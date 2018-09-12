@@ -1,8 +1,7 @@
 package scalaz.metrics
 
 //import javax.management.openmbean.OpenType
-import scalaz.syntax.show._
-import scalaz.{ Order, Semigroup, Show }
+import scalaz.{Order, Semigroup, Show}
 
 sealed trait Resevoir[+A]
 
@@ -26,7 +25,7 @@ object Label {
 
   implicit def showInstance[A: Show] = new Show[Label[A]] {
     override def shows(l: Label[A]): String =
-      l.labels.foldLeft("")((b, a) => b ++ a.shows)
+      l.labels.mkString(".")
   }
 }
 

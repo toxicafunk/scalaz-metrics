@@ -1,28 +1,47 @@
 package scalaz.metrics
-import org.specs2.ScalaCheck
+import java.io.IOException
 
-import scalaz._, Scalaz._
-import scalaz.zio.IO
+import scalaz.Scalaz._
+import scalaz.zio.{App, IO}
 
-import scala.concurrent.duration._
-
-object DropwizardMetricsSpec extends ScalaCheck {
+object DropwizardMetricsSpec extends App {
 
   val dropwizardMetrics = new DropwizardMetrics
 
   val f = IO.point(println("Hola"))
 
-  def increaseCounter() = {
-    val a = dropwizardMetrics.counter(Label(Array("test", "counter")))
+  def increaseCounter: IO[IOException, Unit] = for {
+    f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
+    a <- f(1)
+    b <- f(2)
+  } yield b
 
-    println(s"a = ${a.repeat(3.seconds).attempt}")
-  }
+  def measureGauge: IO[IOException, Unit] = for {
+    a <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(IO.point(5L))
+  } yield a
 
-  def main(args: Array[String]): Unit = {
-    val a = dropwizardMetrics.counter(Label(Array("test", "counter")))
-    a.attempt.map(b => {
-      println(b)
-      b.fold(_ => 1, _ => 0)
-    })
+  def run(args: List[String]): IO[Nothing, ExitStatus] = {
+    increaseCounter.attempt
+      .map(ei => {
+        println(
+          dropwizardMetrics.registry
+            .getCounters()
+            .get("test.counter")
+            .getCount()
+        )
+        ei.fold(_ => 1, _ => 0)
+      })
+
+    measureGauge.attempt
+      .map(ei => {
+        println(
+          dropwizardMetrics.registry
+            .getGauges()
+            .get("test.gauge")
+            .getValue
+        )
+        ei.fold(_ => 1, _ => 0)
+      })
+      .map(ExitStatus.ExitNow(_))
   }
 }
