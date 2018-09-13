@@ -42,7 +42,8 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?]] {
         registry.register(lbl, new Gauge[A]() {
           override def getValue: A = a
         })
-      }).void
+      })
+      .void
   }
 
   override def timer[L: Show](label: Label[L]): IO[IOException, Timer[IO[IOException, ?]]] = {

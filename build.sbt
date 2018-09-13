@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics" % "metrics-healthchecks" % "4.0.1"
 )
 
-libraryDependencies += "org.scalaz" %% "testz-core" % "0.0.5"
+libraryDependencies += "org.scalaz" %% "testz-core"   % "0.0.5"
 libraryDependencies += "org.scalaz" %% "testz-stdlib" % "0.0.5"
 
 resolvers += Resolver.sonatypeRepo("snapshots")

@@ -1,7 +1,7 @@
 package scalaz.metrics
 
 //import javax.management.openmbean.OpenType
-import scalaz.{Order, Semigroup, Show}
+import scalaz.{ Order, Semigroup, Show }
 
 sealed trait Resevoir[+A]
 
