@@ -43,12 +43,11 @@ libraryDependencies ++= Seq(
 libraryDependencies += "org.scalaz" %% "testz-core" % "0.0.5"
 libraryDependencies += "org.scalaz" %% "testz-stdlib" % "0.0.5"
 
-//scalacOptions := Seq(" -P:scalaz:-polyopt")
-
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 resolvers += Resolver.sonatypeRepo("releases")
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7")
 
+// TODO: enforce scalazzi dialect through the scalaz-plugin
 //addCompilerPlugin("org.scalaz" % "scalaz-plugin_2.12.4" % "0.0.3")
