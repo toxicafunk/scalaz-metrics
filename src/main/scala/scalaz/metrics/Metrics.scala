@@ -38,7 +38,8 @@ trait Metrics[F[_]] {
   def histogram[A: Order, L: Show](
     label: Label[L],
     res: Resevoir[A] = Resevoir.Uniform
-  )(implicit
+  )(
+    implicit
     num: Numeric[A]
   ): F[A => F[Unit]]
 

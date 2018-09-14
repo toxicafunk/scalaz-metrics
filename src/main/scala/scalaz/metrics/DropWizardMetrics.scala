@@ -56,7 +56,8 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?]] {
   override def histogram[A: Order, L: Show](
     label: Label[L],
     res: Resevoir[A]
-  )(implicit
+  )(
+    implicit
     num: Numeric[A]
   ): IO[IOException, A => IO[IOException, Unit]] = {
     val lbl = Show[Label[L]].shows(label)
