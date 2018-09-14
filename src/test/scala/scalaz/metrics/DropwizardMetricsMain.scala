@@ -14,15 +14,17 @@ object DropwizardMetricsMain extends RTS {
 
   val f = IO.point(println("Hola"))
 
-  def increaseCounter: IO[IOException, Unit] = for {
-    f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
-    a <- f(1)
-    b <- f(2)
-  } yield b
+  def increaseCounter: IO[IOException, Unit] =
+    for {
+      f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
+      a <- f(1)
+      b <- f(2)
+    } yield b
 
-  def measureGauge: IO[IOException, Unit] = for {
-    a <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(IO.point(5L))
-  } yield a
+  def measureGauge: IO[IOException, Unit] =
+    for {
+      a <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(IO.point(5L))
+    } yield a
 
   def main(args: Array[String]): Unit = {
     val a = increaseCounter.attempt
