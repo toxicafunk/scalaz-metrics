@@ -12,11 +12,13 @@ object DropwizardMetricsSpec extends App {
 
   def performTests: IO[IOException, Unit] =
     for {
-      f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
-      _ <- f(1)
-      _ <- f(2)
-      _ <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(IO.point(5L))
-    } yield ()
+      f     <- dropwizardMetrics.counter(Label(Array("test", "counter")))
+      _     <- f(1)
+      _     <- f(2)
+      _     <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(IO.point(5L))
+      timer <- dropwizardMetrics.timer(Label(Array("test", "timer")))
+      l     <- { Thread.sleep(1000L); timer.stop(timer.apply) }
+    } yield { println(s"time $l ns"); () }
 
   def run(args: List[String]): IO[Nothing, ExitStatus] =
     performTests.attempt
@@ -31,13 +33,19 @@ object DropwizardMetricsSpec extends App {
       dropwizardMetrics.registry
         .getCounters()
         .get("test.counter")
-        .getCount()
+        .getCount
     )
     println(
       dropwizardMetrics.registry
         .getGauges()
         .get("test.gauge")
-        .getValue()
+        .getValue
+    )
+    println(
+      dropwizardMetrics.registry
+        .getTimers()
+        .get("test.timer")
+        .getCount
     )
   }
 }

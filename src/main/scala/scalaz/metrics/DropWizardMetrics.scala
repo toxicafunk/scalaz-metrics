@@ -1,30 +1,21 @@
 package scalaz.metrics
 
 import com.codahale.metrics.{ Gauge, MetricRegistry }
+import com.codahale.metrics.Timer.Context
 import scalaz.metrics.Label._
-import scalaz.zio.IO
+import scalaz.zio._
 import scalaz.{ Order, Semigroup, Show }
 
+//import scala.collection.JavaConverters
 import java.io.IOException
 
-class IOTimer extends Timer[IO[IOException, ?]] {
-  override def apply[A](io: IO[IOException, A]): IO[IOException, A] = io
-}
-
-object IOTimer {
-
-  def apply[A](io: IO[IOException, A]): IOTimer = {
-    val t = new IOTimer()
-    t.apply(io)
-    t
-  }
-}
-
-class DropwizardMetrics extends Metrics[IO[IOException, ?]] {
+class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
 
   val registry: MetricRegistry = new MetricRegistry()
 
-  override def counter[L: Show](label: Label[L]): IO[IOException, Long => IO[IOException, Unit]] =
+  type MetriczIO[A] = IO[IOException, A]
+
+  override def counter[L: Show](label: Label[L]): MetriczIO[Long => IO[IOException, Unit]] =
     IO.sync(
       (l: Long) => {
         val lbl = Show[Label[L]].shows(label)
@@ -35,8 +26,8 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?]] {
   override def gauge[A: Semigroup, L: Show](
     label: Label[L]
   )(
-    io: IO[IOException, A]
-  ): IO[IOException, Unit] = {
+    io: MetriczIO[A]
+  ): MetriczIO[Unit] = {
     val lbl = Show[Label[L]].shows(label)
     io.map(a => {
         registry.register(lbl, new Gauge[A]() {
@@ -46,11 +37,18 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?]] {
       .void
   }
 
-  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[IO[IOException, ?]]] = {
+  class IOTimer(val ctx: Context) extends Timer[MetriczIO[?], Context] {
+    override val a: Context                = ctx
+    override def apply: MetriczIO[Context] = IO.point(a)
+    override def stop(io: MetriczIO[Context]): MetriczIO[Long] =
+      io.map(c => c.stop())
+  }
+
+  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[IO[IOException, ?], Context]] = {
     val lbl = Show[Label[L]].shows(label)
-    val ctx = IO.point(registry.timer(lbl).time())
-    val t   = IOTimer(ctx)
-    IO.point(t)
+    val t   = registry.timer(lbl)
+    val r   = IO.sync(new IOTimer(t.time()))
+    r
   }
 
   override def histogram[A: Order, L: Show](
@@ -59,12 +57,12 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?]] {
   )(
     implicit
     num: Numeric[A]
-  ): IO[IOException, A => IO[IOException, Unit]] = {
+  ): MetriczIO[A => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     IO.point((a: A) => IO.point(registry.histogram(lbl).update(num.toLong(a))))
   }
 
-  override def meter[L: Show](label: Label[L]): IO[IOException, Double => IO[IOException, Unit]] = {
+  override def meter[L: Show](label: Label[L]): MetriczIO[Double => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     IO.point(d => IO.point(registry.meter(lbl).mark(d.toLong)))
   }

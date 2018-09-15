@@ -33,3 +33,6 @@ We need to be able to transform measured data into different pluggable output fo
 1. Implement the traits as a wrapper for some existing API such as Dropwizard or Kamon
 1. Raise tickets for the above actions
 
+## Travis
+Execute `sbt scalafmtCheck test:scalafmtCheck scalafmtSbtCheck test` to make sure the format is correct.
+

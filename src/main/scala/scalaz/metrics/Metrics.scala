@@ -10,8 +10,10 @@ object Resevoir {
   case class Bounded[A](lower: A, upper: A) extends Resevoir[A]
 }
 
-trait Timer[F[_]] {
-  def apply[A](io: F[A]): F[A]
+trait Timer[F[_], A] {
+  val a: A
+  def apply: F[A]
+  def stop(io: F[A]): F[Long]
 }
 
 trait HtmlRender[A] {
@@ -29,7 +31,7 @@ object Label {
   }
 }
 
-trait Metrics[F[_]] {
+trait Metrics[F[_], Ctx] {
 
   def counter[L: Show](label: Label[L]): F[Long => F[Unit]]
 
@@ -43,11 +45,11 @@ trait Metrics[F[_]] {
     num: Numeric[A]
   ): F[A => F[Unit]]
 
-  def timer[L: Show](label: Label[L]): F[Timer[F]]
+  def timer[L: Show](label: Label[L]): F[Timer[F[?], Ctx]]
 
   def meter[L: Show](label: Label[L]): F[Double => F[Unit]]
 
-  def contramap[L0, L: Show](f: L0 => L): Metrics[F] = ???
+  def contramap[L0, L: Show](f: L0 => L): Metrics[F, Ctx] = ???
 }
 
 /* object Main {
