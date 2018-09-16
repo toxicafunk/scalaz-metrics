@@ -1,13 +1,14 @@
 package scalaz.metrics
 
 //import javax.management.openmbean.OpenType
-import scalaz.{ Order, Semigroup, Show }
+import scalaz.{ Semigroup, Show }
 
-sealed trait Resevoir[+A]
+sealed trait Reservoir[+A]
 
-object Resevoir {
-  case object Uniform                       extends Resevoir[Nothing]
-  case class Bounded[A](lower: A, upper: A) extends Resevoir[A]
+object Reservoir {
+  case object Uniform                       extends Reservoir[Nothing]
+  case class Bounded[A](lower: A, upper: A) extends Reservoir[A]
+  case object ExponentiallyDecaying         extends Reservoir[Nothing]
 }
 
 trait Timer[F[_], A] {
@@ -37,9 +38,9 @@ trait Metrics[F[_], Ctx] {
 
   def gauge[A: Semigroup, L: Show](label: Label[L])(io: F[A]): F[Unit]
 
-  def histogram[A: Order, L: Show](
+  def histogram[A: Numeric, L: Show](
     label: Label[L],
-    res: Resevoir[A] = Resevoir.Uniform
+    res: Reservoir[A] = Reservoir.ExponentiallyDecaying
   )(
     implicit
     num: Numeric[A]
