@@ -43,7 +43,7 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
       io.map(c => c.stop())
   }
 
-  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[IO[IOException, ?], Context]] = {
+  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[MetriczIO[?], Context]] = {
     val lbl = Show[Label[L]].shows(label)
     val iot = IO.now(registry.timer(lbl))
     val r   = iot.map(t => new IOTimer(t.time()))
@@ -65,5 +65,4 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
     val lbl = Show[Label[L]].shows(label)
     IO.point(d => IO.now(registry.meter(lbl)).map(m => m.mark(d.toLong)))
   }
-
 }

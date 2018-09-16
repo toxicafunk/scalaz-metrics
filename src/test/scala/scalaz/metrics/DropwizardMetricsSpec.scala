@@ -19,7 +19,13 @@ object DropwizardMetricsSpec extends App {
       _ <- f(2)
       _ <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(IO.point(5L))
       t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
-      l <- { Thread.sleep(1000L); t.stop(t.apply) }
+      l <- IO.traverse(
+            List(
+              Thread.sleep(1000L),
+              Thread.sleep(1400L),
+              Thread.sleep(1200L)
+            )
+          )(a => t.stop(t.apply))
       h <- dropwizardMetrics.histogram(Label(Array("test", "histogram")))
       _ <- IO.traverse(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
       m <- dropwizardMetrics.meter(Label(Array("test", "meter")))
@@ -52,6 +58,12 @@ object DropwizardMetricsSpec extends App {
         .getTimers()
         .get("test.timer")
         .getCount
+    )
+    println(
+      dropwizardMetrics.registry
+        .getTimers()
+        .get("test.timer")
+        .getMeanRate
     )
     println(
       dropwizardMetrics.registry

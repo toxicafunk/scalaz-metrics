@@ -50,7 +50,8 @@ trait Metrics[F[_], Ctx] {
 
   def meter[L: Show](label: Label[L]): F[Double => F[Unit]]
 
-  def contramap[L0, L: Show](f: L0 => L): Metrics[F, Ctx] = ???
+  // TODO is this still needed is L is not fixed to the Metrics trait?
+  //def contramap[L0, L: Show](f: L0 => L): Metrics[F, Ctx]
 }
 
 /* object Main {
