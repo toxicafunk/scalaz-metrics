@@ -26,7 +26,7 @@ class Label[A: Show](val labels: Array[A])
 object Label {
   def apply[A: Show](arr: Array[A]) = new Label(arr)
 
-  implicit def showInstance[A: Show] = new Show[Label[A]] {
+  implicit def showInstance[A: Show]: Show[Label[A]] = new Show[Label[A]] {
     override def shows(l: Label[A]): String =
       l.labels.mkString(".")
   }

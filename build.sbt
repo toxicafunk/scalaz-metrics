@@ -4,6 +4,8 @@ organization in ThisBuild := "org.scalaz"
 
 version in ThisBuild := "0.1.0-SNAPSHOT"
 
+val http4sVersion = "0.18.7"
+
 publishTo in ThisBuild := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
@@ -32,7 +34,10 @@ lazy val root =
 
 libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core" % "7.2.25",
-  "org.scalaz" %% "scalaz-zio"  % "0.2.7"
+  "org.scalaz" %% "scalaz-zio"  % "0.2.7",
+  "org.scalaz" %% "scalaz-zio-interop" % "0.2.7",
+  "org.scalaz" %% "testz-core"   % "0.0.5",
+  "org.scalaz" %% "testz-stdlib" % "0.0.5"
 )
 
 libraryDependencies ++= Seq(
@@ -40,8 +45,13 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics" % "metrics-healthchecks" % "4.0.1"
 )
 
-libraryDependencies += "org.scalaz" %% "testz-core"   % "0.0.5"
-libraryDependencies += "org.scalaz" %% "testz-stdlib" % "0.0.5"
+libraryDependencies ++= Seq(
+  //"org.http4s" %% "http4s-blaze-client" % http4sVersion,
+  //"org.http4s" %% "http4s-circe" % http4sVersion,
+
+  "org.http4s"     %% "http4s-blaze-server"  % http4sVersion,
+  "org.http4s"     %% "http4s-dsl"           % http4sVersion
+)
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 

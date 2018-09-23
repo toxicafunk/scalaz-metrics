@@ -12,8 +12,6 @@ object DropwizardMetricsMain extends RTS {
 
   val dropwizardMetrics = new DropwizardMetrics
 
-  val f = IO.point(println("Hola"))
-
   def increaseCounter: IO[IOException, Unit] =
     for {
       f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
