@@ -2,7 +2,7 @@ package scalaz.metrics
 import java.io.IOException
 
 import scalaz.Scalaz._
-import scalaz.zio.{App, IO}
+import scalaz.zio.{ App, IO }
 
 import scala.math.Numeric.IntIsIntegral
 
@@ -10,7 +10,8 @@ object DropwizardMetricsSpec extends App {
 
   val dropwizardMetrics = new DropwizardMetrics
 
-  def performTests: IO[IOException, Unit] = for {
+  def performTests: IO[IOException, Unit] =
+    for {
       f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
       _ <- f(1)
       _ <- f(2)

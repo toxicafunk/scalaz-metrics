@@ -9,8 +9,9 @@ import scalaz.zio.interop.catz._
 
 object StaticService {
   val service = HttpService[Task] {
-    case request@GET -> Root / name =>
-      StaticFile.fromFile(new File(s"dist/$name"), Some(request))
-      .getOrElse(Response.notFound)
+    case request @ GET -> Root / name =>
+      StaticFile
+        .fromFile(new File(s"dist/$name"), Some(request))
+        .getOrElse(Response.notFound)
   }
 }

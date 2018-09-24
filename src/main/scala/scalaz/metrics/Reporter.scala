@@ -1,7 +1,11 @@
 package scalaz.metrics
 
-import com.codahale.metrics.{MetricFilter, MetricRegistry}
+import com.codahale.metrics.{ MetricFilter, MetricRegistry }
+
 import scala.collection.JavaConverters._
+import scalaz._
+import Scalaz._
+import scalaz.syntax.ToApplyOps
 
 object Reporter {
 
@@ -15,15 +19,17 @@ object Reporter {
     case _ => MetricFilter.ALL
   }
 
-  def report(metrics: MetricRegistry, filter: Option[String]): Map[String, String] = {
+  def report(metrics: MetricRegistry, filter: Option[String]): String = {
     val metricFilter = makeFilter(filter)
-    val m = metrics.getCounters(metricFilter).asScala.map( entry => entry._1 -> entry._2.getCount.toString )
-    m ++ metrics.getGauges(metricFilter).asScala.map( entry => entry._1 -> entry._2.getValue.toString)
-    m ++ metrics.getTimers(metricFilter).asScala.map( entry => entry._1 -> entry._2.getCount.toString)
-    m ++ metrics.getHistograms(metricFilter).asScala.map( entry => entry._1 -> entry._2.getCount.toString)
-    m ++ metrics.getMeters(metricFilter).asScala.map( entry => entry._1 -> entry._2.getCount.toString)
+    val m: Map[String, String] = (
+      metrics.getCounters(metricFilter).asScala.map(entry => {val count = entry._2.getCount; println(s"counters: $count"); entry._1 -> count.toString}).toMap
+        |@| metrics.getGauges(metricFilter).asScala.map(entry => {val gauge = entry._2.getValue; println(s"gauge: $gauge"); entry._1 -> gauge.toString}).toMap
+        |@| metrics.getTimers(metricFilter).asScala.map(entry => entry._1     -> entry._2.getCount.toString).toMap
+        |@| metrics.getHistograms(metricFilter).asScala.map(entry => entry._1 -> entry._2.getCount.toString).toMap
+        |@| metrics.getMeters(metricFilter).asScala.map(entry => entry._1     -> entry._2.getCount.toString).toMap
+    )(_ ++: _ ++: _ ++: _ ++: _)
     // TODO: add means, percentiles, etc
-    m.toMap
+    m.foldLeft("")((acc, entry) => acc + entry._1 + "->" + entry._2 + "\n")
   }
 
 }

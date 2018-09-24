@@ -1,9 +1,9 @@
 package scalaz.metrics.http
 
 import fs2.StreamApp.ExitCode
-import fs2.{Stream, StreamApp}
+import fs2.{ Stream, StreamApp }
 import org.http4s.server.blaze._
-import scalaz.http.{MetricsService, StaticService}
+import scalaz.http.{ MetricsService, StaticService }
 import scalaz.metrics.DropwizardMetrics
 import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
@@ -17,13 +17,11 @@ object ServerTest extends StreamApp[Task] {
 
   val metrics = new DropwizardMetrics
 
-  override def stream(args: List[String], requestShutdown: Task[Unit]): Stream[Task, ExitCode] = {
+  override def stream(args: List[String], requestShutdown: Task[Unit]): Stream[Task, ExitCode] =
     BlazeBuilder[Task]
       .bindHttp(port)
       .mountService(StaticService.service, "/")
       .mountService(MetricsService.service(metrics), "/metrics")
       .mountService(TestMetricsService.service(metrics), "/measure")
       .serve
-  }
 }
-

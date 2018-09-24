@@ -5,10 +5,10 @@ import java.io.IOException
 import com.codahale.metrics.Timer.Context
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
-import org.http4s.{HttpService, Response}
+import org.http4s.{ HttpService, Response }
 import scalaz.Scalaz._
-import scalaz.metrics.{Label, Metrics}
-import scalaz.zio.{IO, RTS}
+import scalaz.metrics.{ Label, Metrics }
+import scalaz.zio.{ IO, RTS }
 import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
 
@@ -47,5 +47,5 @@ object TestMetricsService extends RTS {
 
         Response[Task](Ok).withBody(unsafeRun(m))
       }
-  }
+    }
 }
