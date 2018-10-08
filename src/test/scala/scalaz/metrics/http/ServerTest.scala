@@ -17,6 +17,10 @@ object ServerTest extends StreamApp[Task] {
 
   val metrics = new DropwizardMetrics
 
+  import com.codahale.metrics.jmx.JmxReporter
+  val reporter = JmxReporter.forRegistry(metrics.registry).build
+  reporter.start()
+
   override def stream(args: List[String], requestShutdown: Task[Unit]): Stream[Task, ExitCode] =
     BlazeBuilder[Task]
       .bindHttp(port)
