@@ -8,21 +8,21 @@ import scalaz._
 
 import scala.collection.JavaConverters._
 
-/*trait Reporter[F[_], A] {
+trait Reporter[F[_], A] {
   val extractCounters: MetricFilter => MetricRegistry => F[A]
   val extractGauges: MetricFilter => MetricRegistry => F[A]
   val extractTimers: MetricFilter => MetricRegistry => F[A]
   val extractHistograms: MetricFilter => MetricRegistry => F[A]
   val extractMeters: MetricFilter => MetricRegistry => F[A]
-}*/
+}
 
-trait Reporter[F[_], A] {
+/*trait Reporter[F[_], A] {
   def extractCounters(filter: MetricFilter): MetricRegistry => F[A]
   def extractGauges(filter: MetricFilter): MetricRegistry => F[A]
   def extractTimers(filter: MetricFilter): MetricRegistry => F[A]
   def extractHistograms(filter: MetricFilter): MetricRegistry => F[A]
   def extractMeters(filter: MetricFilter): MetricRegistry => F[A]
-}
+}*/
 
 object Reporter {
 
@@ -36,12 +36,12 @@ object Reporter {
     case _ => MetricFilter.ALL
   }
 
-  implicit val JsonReporter: Reporter[List, Json] = new Reporter[List, Json] {
-    override def extractCounters(filter: MetricFilter): MetricRegistry => List[Json] =
+  implicit val jsonReporter: Reporter[List, Json] = new Reporter[List, Json] {
+    override val extractCounters: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>
       (metrics: MetricRegistry) =>
         metrics.getCounters(filter).asScala.map(entry => jSingleObject(entry._1, jNumber(entry._2.getCount))).toList
 
-    override def extractGauges(filter: MetricFilter): MetricRegistry => List[Json] =
+    override val extractGauges: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>
       (metrics: MetricRegistry) =>
         metrics
           .getGauges(filter)
@@ -63,23 +63,23 @@ object Reporter {
         s"${name}_999th"  -> jNumber(snapshot.get999thPercentile())
       )
 
-    override def extractTimers(filter: MetricFilter): MetricRegistry => List[Json] =
+    override val extractTimers: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>
       (metrics: MetricRegistry) =>
         metrics
           .getTimers(filter)
           .asScala
           .map(entry => {
             Json(
-              s"${entry._1}_count" -> jNumber(entry._2.getCount),
-              s"${entry._1}_meanRate" -> jNumber(entry._2.getMeanRate),
-              s"${entry._1}_oneMinRate" -> jNumber(entry._2.getOneMinuteRate),
-              s"${entry._1}_fiveMinRate" -> jNumber(entry._2.getFiveMinuteRate),
+              s"${entry._1}_count"          -> jNumber(entry._2.getCount),
+              s"${entry._1}_meanRate"       -> jNumber(entry._2.getMeanRate),
+              s"${entry._1}_oneMinRate"     -> jNumber(entry._2.getOneMinuteRate),
+              s"${entry._1}_fiveMinRate"    -> jNumber(entry._2.getFiveMinuteRate),
               s"${entry._1}_fifteenMinRate" -> jNumber(entry._2.getFifteenMinuteRate)
-            ).->: (("snapshot", extractSnapshot(entry._1, entry._2.getSnapshot)))
+            ).deepmerge(extractSnapshot(entry._1, entry._2.getSnapshot))
           })
           .toList
 
-    override def extractHistograms(filter: MetricFilter): MetricRegistry => List[Json] =
+    override val extractHistograms: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>
       (metrics: MetricRegistry) =>
         metrics
           .getHistograms(filter)
@@ -90,7 +90,7 @@ object Reporter {
           })
           .toList
 
-    override def extractMeters(filter: MetricFilter): MetricRegistry => List[Json] =
+    override val extractMeters: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>
       (metrics: MetricRegistry) =>
         metrics
           .getMeters(filter)
@@ -107,16 +107,31 @@ object Reporter {
           .toList
   }
 
-  def report[F[_], A](metrics: MetricRegistry, filter: Option[String])(implicit P: PlusEmpty[F],
-                                                                       R: Reporter[F, A]): F[A] = {
-    import scalaz.syntax.plus._
+  implicit val jsonMonoid: Monoid[Json] = new Monoid[Json] {
+    override def zero: Json                          = jEmptyObject
+    override def append(j1: Json, j2: => Json): Json = j1.deepmerge(j2)
+  }
 
-    type MetricFunction = MetricFilter => MetricRegistry => F[A]
+  //def report[F[_], A](metrics: MetricRegistry, filter: Option[String])(implicit P: PlusEmpty[F], R: Reporter[F, A]): F[A] = {
+  def report[F[_], A](metrics: MetricRegistry,
+                      filter: Option[String])
+                     (cons: (String, A) => A)
+                     (implicit M: Monoid[A], L: Foldable[F], R: Reporter[F, A]): A = {
+
+    import scalaz.syntax.semigroup._
+    //type MetricFunction = MetricFilter => MetricRegistry => F[(String,A)]
 
     val metricFilter = makeFilter(filter)
-    val fs: List[MetricFunction] =
-      List(R.extractCounters, R.extractGauges, R.extractTimers, R.extractHistograms, R.extractMeters)
-    fs.foldLeft(P.empty[A])((acc, f) => acc <+> f(metricFilter)(metrics))
+    val fs = List(("counters", R.extractCounters),
+                  ("gauges", R.extractGauges),
+                  ("timers", R.extractTimers),
+                  ("histograms", R.extractHistograms),
+                  ("meters", R.extractMeters))
+
+    fs.foldLeft(M.zero)((acc0, f) => {
+      val m = f._2(metricFilter)(metrics)
+      acc0 |+| L.foldMap(m)(a => cons(f._1, a))
+    })
 
     // TODO: add means, percentiles, etc
   }
