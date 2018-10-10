@@ -49,7 +49,7 @@ libraryDependencies ++= Seq(
 libraryDependencies ++= Seq(
   //"org.http4s" %% "http4s-blaze-client" % http4sVersion,
   //"org.http4s" %% "http4s-circe" % http4sVersion,
-
+  "org.http4s"     %% "http4s-argonaut"      % http4sVersion,
   "org.http4s"     %% "http4s-blaze-server"  % http4sVersion,
   "org.http4s"     %% "http4s-dsl"           % http4sVersion
 )
