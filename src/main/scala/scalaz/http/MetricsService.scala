@@ -13,13 +13,11 @@ import scalaz.std.list.listInstance
 import scalaz.metrics.Reporter.jsonReporter
 
 object MetricsService {
-  val service = (metrics: DropwizardMetrics) =>
+  val service: DropwizardMetrics => HttpService[Task] = (metrics: DropwizardMetrics) =>
     HttpService[Task] {
-      case GET -> Root / filter => {
+      case GET -> Root / filter =>
         val optFilter = if (filter == "ALL") None else Some(filter)
-        val m: Json =
-          Reporter.report(metrics.registry, optFilter)(jSingleObject)
+        val m: Json = Reporter.report(metrics.registry, optFilter)(jSingleObject)
         Response[Task](Ok).withBody(m)
-      }
   }
 }
