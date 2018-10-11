@@ -9,8 +9,8 @@ import org.http4s.{ HttpService, Response }
 import scalaz.metrics.{ DropwizardMetrics, Reporter }
 import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
-import scalaz.Scalaz.listInstance
-import scalaz.metrics.Reporter._
+import scalaz.std.list.listInstance
+import scalaz.metrics.Reporter.jsonReporter
 
 object MetricsService {
   val service = (metrics: DropwizardMetrics) =>
@@ -18,7 +18,7 @@ object MetricsService {
       case GET -> Root / filter => {
         val optFilter = if (filter == "ALL") None else Some(filter)
         val m: Json =
-          Reporter.report(metrics.registry, optFilter)(jSingleObject)(jsonMonoid, listInstance, jsonReporter)
+          Reporter.report(metrics.registry, optFilter)(jSingleObject)
         Response[Task](Ok).withBody(m)
       }
   }

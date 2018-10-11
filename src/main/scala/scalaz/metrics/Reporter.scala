@@ -107,11 +107,6 @@ object Reporter {
           .toList
   }
 
-  implicit val jsonMonoid: Monoid[Json] = new Monoid[Json] {
-    override def zero: Json                          = jEmptyObject
-    override def append(j1: Json, j2: => Json): Json = j1.deepmerge(j2)
-  }
-
   //def report[F[_], A](metrics: MetricRegistry, filter: Option[String])(implicit P: PlusEmpty[F], R: Reporter[F, A]): F[A] = {
   def report[F[_], A](metrics: MetricRegistry,
                       filter: Option[String])
