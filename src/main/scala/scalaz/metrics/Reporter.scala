@@ -16,14 +16,6 @@ trait Reporter[F[_], A] {
   val extractMeters: MetricFilter => MetricRegistry => F[A]
 }
 
-/*trait Reporter[F[_], A] {
-  def extractCounters(filter: MetricFilter): MetricRegistry => F[A]
-  def extractGauges(filter: MetricFilter): MetricRegistry => F[A]
-  def extractTimers(filter: MetricFilter): MetricRegistry => F[A]
-  def extractHistograms(filter: MetricFilter): MetricRegistry => F[A]
-  def extractMeters(filter: MetricFilter): MetricRegistry => F[A]
-}*/
-
 object Reporter {
 
   def makeFilter(filter: Option[String]): MetricFilter = filter match {
@@ -107,13 +99,98 @@ object Reporter {
           .toList
   }
 
-  //def report[F[_], A](metrics: MetricRegistry, filter: Option[String])(implicit P: PlusEmpty[F], R: Reporter[F, A]): F[A] = {
+  type MapEither = Either[Measurable, Map[String, Measurable]]
+
+  implicit def mapReporter: Reporter[Map[String, ?], MapEither] = new Reporter[Map[String, ?], MapEither] {
+    override val extractCounters: MetricFilter => MetricRegistry => Map[String, MapEither] = (filter: MetricFilter) =>
+      (metrics: MetricRegistry) =>
+        metrics
+          .getCounters(filter)
+          .asScala
+          .map(entry => entry._1 -> Left(new LongZ(entry._2.getCount)))
+          .toMap
+
+    override val extractGauges: MetricFilter => MetricRegistry => Map[String, MapEither] = (filter: MetricFilter) =>
+      (metrics: MetricRegistry) =>
+        metrics
+          .getGauges(filter)
+          .asScala
+          .map(entry => entry._1 -> Left(new StringZ(entry._2.getValue.toString)))
+          .toMap
+
+    def extractSnapshot(name: String, snapshot: Snapshot): Map[String, Measurable] =
+      Map(
+        s"${name}_max"    -> new LongZ(snapshot.getMax),
+        s"${name}_min"    -> new LongZ(snapshot.getMin),
+        s"${name}_mean"   -> new DoubleZ(snapshot.getMean),
+        s"${name}_median" -> new DoubleZ(snapshot.getMedian),
+        s"${name}_stdDev" -> new DoubleZ(snapshot.getStdDev),
+        s"${name}_75th"   -> new DoubleZ(snapshot.get75thPercentile()),
+        s"${name}_95th"   -> new DoubleZ(snapshot.get95thPercentile()),
+        s"${name}_98th"   -> new DoubleZ(snapshot.get98thPercentile()),
+        s"${name}_99th"   -> new DoubleZ(snapshot.get99thPercentile()),
+        s"${name}_999th"  -> new DoubleZ(snapshot.get999thPercentile())
+      )
+
+    override val extractTimers: MetricFilter => MetricRegistry => Map[String, MapEither] = (filter: MetricFilter) =>
+      (metrics: MetricRegistry) =>
+        metrics
+          .getTimers(filter)
+          .asScala
+          .map(
+            entry =>
+              entry._1 -> Right(
+                Map(
+                  s"${entry._1}_count"          -> new LongZ(entry._2.getCount),
+                  s"${entry._1}_meanRate"       -> new DoubleZ(entry._2.getMeanRate),
+                  s"${entry._1}_oneMinRate"     -> new DoubleZ(entry._2.getOneMinuteRate),
+                  s"${entry._1}_fiveMinRate"    -> new DoubleZ(entry._2.getFiveMinuteRate),
+                  s"${entry._1}_fifteenMinRate" -> new DoubleZ(entry._2.getFifteenMinuteRate)
+                ) ++ extractSnapshot(entry._1, entry._2.getSnapshot)
+              )
+          )
+          .toMap
+
+    override val extractHistograms: MetricFilter => MetricRegistry => Map[String, MapEither] = (filter: MetricFilter) =>
+      (metrics: MetricRegistry) =>
+        metrics
+          .getHistograms(filter)
+          .asScala
+          .map(
+            entry =>
+              entry._1 -> Right(
+                Map(
+                  s"${entry._1}_count" -> new LongZ(entry._2.getCount)
+                ) ++ extractSnapshot(entry._1, entry._2.getSnapshot)
+              )
+          )
+          .toMap
+
+    override val extractMeters: MetricFilter => MetricRegistry => Map[String, MapEither] = (filter: MetricFilter) =>
+      (metrics: MetricRegistry) =>
+        metrics
+          .getMeters(filter)
+          .asScala
+          .map(
+            entry =>
+              entry._1 -> Right(
+                Map(
+                  s"${entry._1}_count"          -> new LongZ(entry._2.getCount),
+                  s"${entry._1}_meanRate"       -> new DoubleZ(entry._2.getMeanRate),
+                  s"${entry._1}_oneMinRate"     -> new DoubleZ(entry._2.getOneMinuteRate),
+                  s"${entry._1}_fiveMinRate"    -> new DoubleZ(entry._2.getFiveMinuteRate),
+                  s"${entry._1}_fifteenMinRate" -> new DoubleZ(entry._2.getFifteenMinuteRate)
+                )
+              )
+          )
+          .toMap
+  }
+
   def report[F[_], A](metrics: MetricRegistry, filter: Option[String])(
     cons: (String, A) => A
   )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[F, A]): A = {
 
     import scalaz.syntax.semigroup._
-    //type MetricFunction = MetricFilter => MetricRegistry => F[(String,A)]
 
     val metricFilter = makeFilter(filter)
     val fs = List(
