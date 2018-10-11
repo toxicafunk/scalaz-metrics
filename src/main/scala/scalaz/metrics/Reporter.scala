@@ -108,26 +108,25 @@ object Reporter {
   }
 
   //def report[F[_], A](metrics: MetricRegistry, filter: Option[String])(implicit P: PlusEmpty[F], R: Reporter[F, A]): F[A] = {
-  def report[F[_], A](metrics: MetricRegistry,
-                      filter: Option[String])
-                     (cons: (String, A) => A)
-                     (implicit M: Monoid[A], L: Foldable[F], R: Reporter[F, A]): A = {
+  def report[F[_], A](metrics: MetricRegistry, filter: Option[String])(
+    cons: (String, A) => A
+  )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[F, A]): A = {
 
     import scalaz.syntax.semigroup._
     //type MetricFunction = MetricFilter => MetricRegistry => F[(String,A)]
 
     val metricFilter = makeFilter(filter)
-    val fs = List(("counters", R.extractCounters),
-                  ("gauges", R.extractGauges),
-                  ("timers", R.extractTimers),
-                  ("histograms", R.extractHistograms),
-                  ("meters", R.extractMeters))
+    val fs = List(
+      ("counters", R.extractCounters),
+      ("gauges", R.extractGauges),
+      ("timers", R.extractTimers),
+      ("histograms", R.extractHistograms),
+      ("meters", R.extractMeters)
+    )
 
     fs.foldLeft(M.zero)((acc0, f) => {
       val m = f._2(metricFilter)(metrics)
       acc0 |+| L.foldMap(m)(a => cons(f._1, a))
     })
-
-    // TODO: add means, percentiles, etc
   }
 }

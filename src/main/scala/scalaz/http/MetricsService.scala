@@ -17,7 +17,7 @@ object MetricsService {
     HttpService[Task] {
       case GET -> Root / filter =>
         val optFilter = if (filter == "ALL") None else Some(filter)
-        val m: Json = Reporter.report(metrics.registry, optFilter)(jSingleObject)
+        val m: Json   = Reporter.report(metrics.registry, optFilter)(jSingleObject)
         Response[Task](Ok).withBody(m)
-  }
+    }
 }
