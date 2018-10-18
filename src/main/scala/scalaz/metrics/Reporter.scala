@@ -18,16 +18,6 @@ trait Reporter[F[_], A] {
 
 object Reporter {
 
-  def makeFilter(filter: Option[String]): MetricFilter = filter match {
-    case Some(s) =>
-      s.charAt(0) match {
-        case '+' => MetricFilter.startsWith(s.substring(1))
-        case '-' => MetricFilter.endsWith(s.substring(1))
-        case _   => MetricFilter.contains(s)
-      }
-    case _ => MetricFilter.ALL
-  }
-
   implicit val jsonReporter: Reporter[List, Json] = new Reporter[List, Json] {
     override val extractCounters: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>
       (metrics: MetricRegistry) =>
@@ -192,7 +182,7 @@ object Reporter {
 
     import scalaz.syntax.semigroup._
 
-    val metricFilter = makeFilter(filter)
+    val metricFilter = DropwizardMetrics.makeFilter(filter)
     val fs = List(
       ("counters", R.extractCounters),
       ("gauges", R.extractGauges),

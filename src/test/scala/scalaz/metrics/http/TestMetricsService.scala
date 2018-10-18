@@ -17,12 +17,15 @@ import scala.math.Numeric.IntIsIntegral
 object TestMetricsService extends RTS {
   println("Serving")
 
+  val s                  = Stream.from(1)
+  val tester: () => Long = () => s.takeWhile(_ < 10).head.toLong
+
   def performTests(metrics: Metrics[IO[IOException, ?], Context]): IO[IOException, String] =
     for {
       f <- metrics.counter(Label(Array("test", "counter")))
       _ <- f(1)
       _ <- f(2)
-      _ <- metrics.gauge(Label(Array("test", "gauge")))(IO.point(5L))
+      _ <- metrics.gauge(Label(Array("test", "gauge")))(IO.sync(tester))
       t <- metrics.timer(Label(Array("test", "timer")))
       l <- IO.traverse(
             List(
@@ -39,13 +42,12 @@ object TestMetricsService extends RTS {
 
   val service = (metrics: Metrics[IO[IOException, ?], Context]) =>
     HttpService[Task] {
-      case GET -> Root => {
+      case GET -> Root =>
         val m = performTests(metrics).attempt
           .map(ei => {
             ei.fold(_ => "failure encountered", s => s)
           })
 
         Response[Task](Ok).withBody(unsafeRun(m))
-      }
     }
 }

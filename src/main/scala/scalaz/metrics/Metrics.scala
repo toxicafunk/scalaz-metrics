@@ -36,7 +36,7 @@ trait Metrics[F[_], Ctx] {
 
   def counter[L: Show](label: Label[L]): F[Long => F[Unit]]
 
-  def gauge[A: Semigroup, L: Show](label: Label[L])(io: F[A]): F[Unit]
+  def gauge[A: Semigroup, L: Show](label: Label[L])(io: F[() => A]): F[Unit]
 
   def histogram[A: Numeric, L: Show](
     label: Label[L],

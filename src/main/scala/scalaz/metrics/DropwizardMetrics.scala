@@ -1,12 +1,12 @@
 package scalaz.metrics
 
-import com.codahale.metrics.{ Gauge, MetricRegistry }
+import java.io.IOException
+
 import com.codahale.metrics.Timer.Context
+import com.codahale.metrics.{ Gauge, MetricFilter, MetricRegistry }
 import scalaz.metrics.Label._
 import scalaz.zio.IO
 import scalaz.{ Semigroup, Show }
-
-import java.io.IOException
 
 class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
 
@@ -25,12 +25,12 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
   override def gauge[A: Semigroup, L: Show](
     label: Label[L]
   )(
-    io: MetriczIO[A]
+    io: MetriczIO[() => A]
   ): MetriczIO[Unit] = {
     val lbl = Show[Label[L]].shows(label)
     io.map(a => {
         registry.register(lbl, new Gauge[A]() {
-          override def getValue: A = a
+          override def getValue: A = a()
         })
       })
       .void
@@ -64,5 +64,17 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
   override def meter[L: Show](label: Label[L]): MetriczIO[Double => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     IO.point(d => IO.now(registry.meter(lbl)).map(m => m.mark(d.toLong)))
+  }
+}
+
+object DropwizardMetrics {
+  def makeFilter(filter: Option[String]): MetricFilter = filter match {
+    case Some(s) =>
+      s.charAt(0) match {
+        case '+' => MetricFilter.startsWith(s.substring(1))
+        case '-' => MetricFilter.endsWith(s.substring(1))
+        case _   => MetricFilter.contains(s)
+      }
+    case _ => MetricFilter.ALL
   }
 }
