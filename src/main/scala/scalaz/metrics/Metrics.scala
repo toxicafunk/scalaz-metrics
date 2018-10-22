@@ -2,13 +2,14 @@ package scalaz.metrics
 
 //import javax.management.openmbean.OpenType
 import scalaz.{ Semigroup, Show }
+import scala.concurrent.duration.TimeUnit
 
 sealed trait Reservoir[+A]
 
 object Reservoir {
-  case object Uniform                       extends Reservoir[Nothing]
-  case class Bounded[A](lower: A, upper: A) extends Reservoir[A]
-  case object ExponentiallyDecaying         extends Reservoir[Nothing]
+  case object Uniform                                 extends Reservoir[Nothing]
+  case class Bounded[A](window: Long, unit: TimeUnit) extends Reservoir[A]
+  case object ExponentiallyDecaying                   extends Reservoir[Nothing]
 }
 
 trait Timer[F[_], A] {

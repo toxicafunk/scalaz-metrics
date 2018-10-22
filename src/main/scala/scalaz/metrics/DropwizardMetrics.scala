@@ -2,9 +2,11 @@ package scalaz.metrics
 
 import java.io.IOException
 
+import com.codahale.metrics.MetricRegistry.MetricSupplier
 import com.codahale.metrics.Timer.Context
-import com.codahale.metrics.{ Gauge, MetricFilter, MetricRegistry }
+import com.codahale.metrics.{ Reservoir => DWReservoir, _ }
 import scalaz.metrics.Label._
+import scalaz.metrics.Reservoir._
 import scalaz.zio.IO
 import scalaz.{ Semigroup, Show }
 
@@ -58,6 +60,15 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
     num: Numeric[A]
   ): MetriczIO[A => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
+    val reservoir: DWReservoir = res match {
+      case Uniform               => new UniformReservoir
+      case ExponentiallyDecaying => new ExponentiallyDecayingReservoir
+      case Bounded(window, unit) => new SlidingTimeWindowReservoir(window, unit)
+    }
+    new MetricSupplier[Histogram] {
+      override def newMetric(): Histogram = new Histogram(reservoir)
+    }
+
     IO.sync((a: A) => IO.sync(registry.histogram(lbl).update(num.toLong(a))))
   }
 
