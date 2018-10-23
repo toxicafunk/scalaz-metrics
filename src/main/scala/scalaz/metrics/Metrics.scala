@@ -54,25 +54,3 @@ trait Metrics[F[_], Ctx] {
   // TODO is this still needed is L is not fixed to the Metrics trait?
   //def contramap[L0, L: Show](f: L0 => L): Metrics[F, Ctx]
 }
-
-/* object Main {
-  // Example usage:
-  for {
-    requestCount  <- counter(nel("server", "requests", "failed"))
-    _             <- requestCount(1)
-
-    _             <- gague("evictions-count")(cache.getEvictionsCount)
-
-    requestLength <- histogram[Double]("request-length")
-    _             <- requestLength(requestLength)
-
-    requestTiming <- timer("request-timing")
-    _             <- requestTime(doRequest(x, y, z))
-  }
-
-
-  // Syntax extensions
-  io.counter(label)
-  io.timed(label)
-}
- */
