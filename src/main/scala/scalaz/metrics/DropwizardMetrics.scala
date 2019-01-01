@@ -16,26 +16,30 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
 
   type MetriczIO[A] = IO[IOException, A]
 
-  override def counter[L: Show](label: Label[L]): MetriczIO[Long => IO[IOException, Unit]] =
+  override def counter[L: Show](label: Label[L]): MetriczIO[Long => IO[IOException, Unit]] = {
+    val lbl = Show[Label[L]].shows(label)
     IO.sync(
       (l: Long) => {
-        val lbl = Show[Label[L]].shows(label)
         IO.point(registry.counter(lbl).inc(l))
       }
     )
+  }
 
-  override def gauge[A: Semigroup, L: Show](
+  override def gauge[A, B: Semigroup, L: Show](
     label: Label[L]
   )(
-    io: MetriczIO[() => A]
-  ): MetriczIO[Unit] = {
+    f: Option[A] => B
+  ): MetriczIO[Option[A] => IO[IOException, Unit]] = {
     val lbl = Show[Label[L]].shows(label)
-    io.map(a => {
-        registry.register(lbl, new Gauge[A]() {
-          override def getValue: A = a()
+    IO.sync(
+      (op: Option[A]) =>
+        IO.point({
+          registry.register(lbl, new Gauge[B]() {
+            override def getValue: B = f(op)
+          })
+          ()
         })
-      })
-      .void
+    )
   }
 
   class IOTimer(val ctx: Context) extends Timer[MetriczIO[?], Context] {
@@ -61,20 +65,20 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
   ): MetriczIO[A => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val reservoir: DWReservoir = res match {
-      case Uniform               => new UniformReservoir
-      case ExponentiallyDecaying => new ExponentiallyDecayingReservoir
+      case Uniform(config@_)               => new UniformReservoir
+      case ExponentiallyDecaying(config@_) => new ExponentiallyDecayingReservoir
       case Bounded(window, unit) => new SlidingTimeWindowReservoir(window, unit)
     }
-    new MetricSupplier[Histogram] {
+    val supplier = new MetricSupplier[Histogram] {
       override def newMetric(): Histogram = new Histogram(reservoir)
     }
 
-    IO.sync((a: A) => IO.sync(registry.histogram(lbl).update(num.toLong(a))))
+    IO.sync((a: A) => IO.sync(registry.histogram(lbl, supplier).update(num.toLong(a))))
   }
 
   override def meter[L: Show](label: Label[L]): MetriczIO[Double => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
-    IO.point(d => IO.now(registry.meter(lbl)).map(m => m.mark(d.toLong)))
+    IO.sync(d => IO.now(registry.meter(lbl)).map(m => m.mark(d.toLong)))
   }
 }
 

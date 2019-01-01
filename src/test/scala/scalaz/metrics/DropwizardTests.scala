@@ -16,10 +16,11 @@ object DropwizardTests extends RTS {
     b <- f(2)
   } yield b
 
-  val testGauge: (() => Long) => IO[IOException, Unit] = (f: () => Long) =>
+  val testGauge: (Option[Unit] => Long) => IO[IOException, Unit] = (f: Option[Unit] => Long) =>
     for {
-      a <- dropwizardMetrics.gauge[Long, String](Label(Array("test", "gauge")))(IO.sync(f))
-    } yield a
+      a <- dropwizardMetrics.gauge[Unit, Long, String](Label(Array("test", "gauge")))(f)
+      r <- a(None)
+    } yield r
 
   val testTimer: IO[IOException, List[Long]] = for {
     t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
@@ -58,7 +59,7 @@ object DropwizardTests extends RTS {
         assert(counter == 3)
       },
       test("gauge returns latest value") { () =>
-        val tester: () => Long = () => System.nanoTime()
+        val tester: Option[Unit] => Long = (op: Option[Unit]) => System.nanoTime()
         unsafeRun(testGauge(tester))
         val a1 = dropwizardMetrics.registry
           .getGauges()

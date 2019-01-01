@@ -21,17 +21,17 @@ import java.util.Date
  *CompositeData.class.getName(),
  *TabularData.class.getName() }
  **/
-trait Measurable                      extends Any
-class VoidZ(val z: Unit)              extends AnyVal with Measurable
-class BooleanZ(val z: Boolean)        extends AnyVal with Measurable
-class CharacterZ(val z: Character)    extends AnyVal with Measurable
-class ByteZ(val z: Byte)              extends AnyVal with Measurable
-class ShortZ(val z: Short)            extends AnyVal with Measurable
-class IntegerZ(val z: Integer)        extends AnyVal with Measurable
-class LongZ(val z: Long)              extends AnyVal with Measurable
-class FloatZ(val z: Float)            extends AnyVal with Measurable
-class DoubleZ(val z: Double)          extends AnyVal with Measurable
-class StringZ(val z: String)          extends AnyVal with Measurable
-class BigDecimalZ(val z: BigDecimal)  extends AnyVal with Measurable
-class BigIntegerzZ(val z: BigInteger) extends AnyVal with Measurable
-class DateZ(val z: Date)              extends AnyVal with Measurable
+trait Measurable                       extends Any
+case class VoidZ(z: Unit)              extends AnyVal with Measurable
+case class BooleanZ(z: Boolean)        extends AnyVal with Measurable
+case class CharacterZ(z: Character)    extends AnyVal with Measurable
+case class ByteZ(z: Byte)              extends AnyVal with Measurable
+case class ShortZ(z: Short)            extends AnyVal with Measurable
+case class IntegerZ(z: Integer)        extends AnyVal with Measurable
+case class LongZ(z: Long)              extends AnyVal with Measurable
+case class FloatZ(z: Float)            extends AnyVal with Measurable
+case class DoubleZ(z: Double)          extends AnyVal with Measurable
+case class StringZ(z: String)          extends AnyVal with Measurable
+case class BigDecimalZ(z: BigDecimal)  extends AnyVal with Measurable
+case class BigIntegerzZ(z: BigInteger) extends AnyVal with Measurable
+case class DateZ(z: Date)              extends AnyVal with Measurable

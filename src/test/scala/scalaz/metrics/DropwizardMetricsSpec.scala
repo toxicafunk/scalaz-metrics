@@ -10,14 +10,15 @@ object DropwizardMetricsSpec extends App {
 
   val dropwizardMetrics = new DropwizardMetrics
 
-  val tester: () => Long = () => System.nanoTime()
+  val tester: Option[Unit] => Long = (op: Option[Unit]) => System.nanoTime()
 
   def performTests: IO[IOException, Unit] =
     for {
       f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
       _ <- f(1)
       _ <- f(2)
-      _ <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(IO.sync(tester))
+      g <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(tester)
+      _ <- g(None)
       t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
       l <- IO.traverse(
             List(

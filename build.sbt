@@ -46,6 +46,8 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics" % "metrics-jmx"          % "4.0.1"
 )
 
+libraryDependencies += "io.prometheus" % "simpleclient" % "0.6.0"
+
 libraryDependencies ++= Seq(
   //"org.http4s" %% "http4s-blaze-client" % http4sVersion,
   //"org.http4s" %% "http4s-circe" % http4sVersion,
