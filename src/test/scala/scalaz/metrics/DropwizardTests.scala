@@ -24,7 +24,7 @@ object DropwizardTests extends RTS {
 
   val testTimer: IO[IOException, List[Long]] = for {
     t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
-    l <- IO.traverse(
+    l <- IO.foreach(
           List(
             Thread.sleep(1000L),
             Thread.sleep(1400L),
@@ -37,13 +37,13 @@ object DropwizardTests extends RTS {
     import scala.math.Numeric.IntIsIntegral
     for {
       h <- dropwizardMetrics.histogram(Label(Array("test", "histogram")))
-      _ <- IO.traverse(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
+      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
     } yield ()
   }
 
   val testMeter: IO[IOException, Unit] = for {
     m <- dropwizardMetrics.meter(Label(Array("test", "meter")))
-    _ <- IO.traverse(1 to 5)(i => IO.now(m(1)))
+    _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
   } yield ()
 
   def tests[T](harness: Harness[T]): T = {

@@ -20,7 +20,7 @@ object DropwizardMetricsSpec extends App {
       g <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(tester)
       _ <- g(None)
       t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
-      l <- IO.traverse(
+      l <- IO.foreach(
             List(
               Thread.sleep(1000L),
               Thread.sleep(1400L),
@@ -28,9 +28,9 @@ object DropwizardMetricsSpec extends App {
             )
           )(a => t.stop(t.apply))
       h <- dropwizardMetrics.histogram(Label(Array("test", "histogram")))
-      _ <- IO.traverse(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
+      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
       m <- dropwizardMetrics.meter(Label(Array("test", "meter")))
-      _ <- IO.traverse(1 to 5)(i => IO.now(m(1)))
+      _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
     } yield { println(s"time $l ns"); () }
 
   def run(args: List[String]): IO[Nothing, ExitStatus] =

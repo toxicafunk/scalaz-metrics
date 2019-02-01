@@ -22,7 +22,7 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Nothing] {
       .help(s"$lbl counter")
       .register()
     IO.sync { l: Long =>
-      IO.point(c.inc(l.toDouble))
+      IO.succeedLazy(c.inc(l.toDouble))
     }
   }
 
@@ -37,7 +37,7 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Nothing] {
       .register()
     IO.sync(
       (op: Option[A]) =>
-        IO.point(f(op) match {
+        IO.succeedLazy(f(op) match {
           case d: Double => g.inc(d)
           case _         => ()
         })

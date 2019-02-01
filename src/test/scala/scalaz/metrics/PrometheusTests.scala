@@ -1,7 +1,8 @@
 package scalaz.metrics
 
 import java.io.IOException
-import java.util.{Set, HashSet}
+import java.util
+import java.util.{HashSet, Set}
 
 import scalaz.std.string.stringInstance
 import scalaz.Scalaz._
@@ -41,7 +42,7 @@ object PrometheusTests extends RTS {
     import scala.math.Numeric.IntIsIntegral
     for {
       h <- prometheusMetrics.histogram(Label(Array("test", "hist"), ""))
-      _ <- IO.traverse(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
+      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
     } yield ()
   }
 
@@ -49,7 +50,7 @@ object PrometheusTests extends RTS {
     import scala.math.Numeric.IntIsIntegral
     for {
       h <- prometheusMetrics.histogramTimer(Label(Array("test", "tid"), ""))
-      _ <- IO.traverse(List(h(), h(), h(), h(), h()))(io => {
+      _ <- IO.foreach(List(h(), h(), h(), h(), h()))(io => {
         Thread.sleep(500)
         io.void
       })
@@ -66,7 +67,7 @@ object PrometheusTests extends RTS {
     section(
       test("counter increases by `inc` amount") { () =>
         unsafeRun(testCounter)
-        val set: Set[String] = new HashSet[String]()
+        val set: util.Set[String] = new util.HashSet[String]()
         set.add("testcounter")
         val counter = prometheusMetrics.registry
           .filteredMetricFamilySamples(set).nextElement().samples.get(0).value

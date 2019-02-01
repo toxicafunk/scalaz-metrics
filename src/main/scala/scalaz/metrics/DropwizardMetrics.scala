@@ -20,7 +20,7 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
     val lbl = Show[Label[L]].shows(label)
     IO.sync(
       (l: Long) => {
-        IO.point(registry.counter(lbl).inc(l))
+        IO.succeedLazy(registry.counter(lbl).inc(l))
       }
     )
   }
@@ -33,7 +33,7 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
     val lbl = Show[Label[L]].shows(label)
     IO.sync(
       (op: Option[A]) =>
-        IO.point({
+        IO.succeedLazy({
           registry.register(lbl, new Gauge[B]() {
             override def getValue: B = f(op)
           })
@@ -44,14 +44,14 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
 
   class IOTimer(val ctx: Context) extends Timer[MetriczIO[?], Context] {
     override val a: Context                = ctx
-    override def apply: MetriczIO[Context] = IO.point(a)
+    override def apply: MetriczIO[Context] = IO.succeedLazy(a)
     override def stop(io: MetriczIO[Context]): MetriczIO[Long] =
       io.map(c => c.stop())
   }
 
   override def timer[L: Show](label: Label[L]): IO[IOException, Timer[MetriczIO[?], Context]] = {
     val lbl = Show[Label[L]].shows(label)
-    val iot = IO.now(registry.timer(lbl))
+    val iot = IO.succeed(registry.timer(lbl))
     val r   = iot.map(t => new IOTimer(t.time()))
     r
   }
@@ -78,7 +78,7 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
 
   override def meter[L: Show](label: Label[L]): MetriczIO[Double => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
-    IO.sync(d => IO.now(registry.meter(lbl)).map(m => m.mark(d.toLong)))
+    IO.sync(d => IO.succeed(registry.meter(lbl)).map(m => m.mark(d.toLong)))
   }
 }
 

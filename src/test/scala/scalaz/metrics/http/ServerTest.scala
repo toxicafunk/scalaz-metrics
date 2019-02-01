@@ -1,31 +1,45 @@
 package scalaz.metrics.http
 
-import fs2.StreamApp.ExitCode
-import fs2.{ Stream, StreamApp }
+import cats.data.Kleisli
+import com.codahale.metrics.jmx.JmxReporter
+import org.http4s.server.Router
 import org.http4s.server.blaze._
-import scalaz.http.{ MetricsService, StaticService }
+import org.http4s.{Request, Response}
+import scalaz.http.{MetricsService, StaticService}
 import scalaz.metrics.DropwizardMetrics
+import scalaz.zio.{App, Clock, IO}
 import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
+import org.http4s.implicits._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Properties.envOrNone
 
-object ServerTest extends StreamApp[Task] {
+object ServerTest extends App {
   val port: Int = envOrNone("HTTP_PORT").fold(9090)(_.toInt)
   println(s"Starting server on port $port")
 
+  implicit val clock: Clock = Clock.Live
+
   val metrics = new DropwizardMetrics
 
-  import com.codahale.metrics.jmx.JmxReporter
-  val reporter = JmxReporter.forRegistry(metrics.registry).build
+  val reporter: JmxReporter = JmxReporter.forRegistry(metrics.registry).build
   reporter.start()
 
-  override def stream(args: List[String], requestShutdown: Task[Unit]): Stream[Task, ExitCode] =
-    BlazeBuilder[Task]
+  val httpApp: DropwizardMetrics => Kleisli[Task, Request[Task], Response[Task]] = (metrics: DropwizardMetrics) =>
+    Router(
+      "/"        -> StaticService.service,
+      "/metrics" -> MetricsService.service(metrics),
+      "/measure" -> TestMetricsService.service(metrics)
+    ).orNotFound
+
+  override def run(args: List[String]): IO[Nothing, ExitStatus] = {
+    BlazeServerBuilder[Task]
       .bindHttp(port)
-      .mountService(StaticService.service, "/")
-      .mountService(MetricsService.service(metrics), "/metrics")
-      .mountService(TestMetricsService.service(metrics), "/measure")
+      .withHttpApp(httpApp(metrics))
       .serve
+      .compile
+      .drain
+      .run
+      .map(_ => ExitStatus.ExitNow(0))
+  }
 }

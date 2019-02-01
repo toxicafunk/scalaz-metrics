@@ -3,8 +3,9 @@ package scalaz.metrics
 import argonaut._
 import Argonaut._
 import argonaut.Json
-import com.codahale.metrics.{ MetricFilter, MetricRegistry, Snapshot }
+import com.codahale.metrics.{MetricFilter, MetricRegistry, Snapshot}
 import scalaz._
+import scalaz.zio.Clock
 
 import scala.collection.JavaConverters._
 
@@ -17,6 +18,8 @@ trait Reporter[F[_], A] {
 }
 
 object Reporter {
+
+  implicit val clock: Clock = Clock.Live
 
   implicit val jsonReporter: Reporter[List, Json] = new Reporter[List, Json] {
     override val extractCounters: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>
@@ -97,7 +100,7 @@ object Reporter {
         metrics
           .getCounters(filter)
           .asScala
-          .map(entry => entry._1 -> Left(new LongZ(entry._2.getCount)))
+          .map(entry => entry._1 -> Left(LongZ(entry._2.getCount)))
           .toMap
 
     override val extractGauges: MetricFilter => MetricRegistry => Map[String, MapEither] = (filter: MetricFilter) =>
@@ -105,21 +108,21 @@ object Reporter {
         metrics
           .getGauges(filter)
           .asScala
-          .map(entry => entry._1 -> Left(new StringZ(entry._2.getValue.toString)))
+          .map(entry => entry._1 -> Left(StringZ(entry._2.getValue.toString)))
           .toMap
 
     def extractSnapshot(name: String, snapshot: Snapshot): Map[String, Measurable] =
       Map(
-        s"${name}_max"    -> new LongZ(snapshot.getMax),
-        s"${name}_min"    -> new LongZ(snapshot.getMin),
-        s"${name}_mean"   -> new DoubleZ(snapshot.getMean),
-        s"${name}_median" -> new DoubleZ(snapshot.getMedian),
-        s"${name}_stdDev" -> new DoubleZ(snapshot.getStdDev),
-        s"${name}_75th"   -> new DoubleZ(snapshot.get75thPercentile()),
-        s"${name}_95th"   -> new DoubleZ(snapshot.get95thPercentile()),
-        s"${name}_98th"   -> new DoubleZ(snapshot.get98thPercentile()),
-        s"${name}_99th"   -> new DoubleZ(snapshot.get99thPercentile()),
-        s"${name}_999th"  -> new DoubleZ(snapshot.get999thPercentile())
+        s"${name}_max"    -> LongZ(snapshot.getMax),
+        s"${name}_min"    -> LongZ(snapshot.getMin),
+        s"${name}_mean"   -> DoubleZ(snapshot.getMean),
+        s"${name}_median" -> DoubleZ(snapshot.getMedian),
+        s"${name}_stdDev" -> DoubleZ(snapshot.getStdDev),
+        s"${name}_75th"   -> DoubleZ(snapshot.get75thPercentile()),
+        s"${name}_95th"   -> DoubleZ(snapshot.get95thPercentile()),
+        s"${name}_98th"   -> DoubleZ(snapshot.get98thPercentile()),
+        s"${name}_99th"   -> DoubleZ(snapshot.get99thPercentile()),
+        s"${name}_999th"  -> DoubleZ(snapshot.get999thPercentile())
       )
 
     override val extractTimers: MetricFilter => MetricRegistry => Map[String, MapEither] = (filter: MetricFilter) =>
@@ -131,11 +134,11 @@ object Reporter {
             entry =>
               entry._1 -> Right(
                 Map(
-                  s"${entry._1}_count"          -> new LongZ(entry._2.getCount),
-                  s"${entry._1}_meanRate"       -> new DoubleZ(entry._2.getMeanRate),
-                  s"${entry._1}_oneMinRate"     -> new DoubleZ(entry._2.getOneMinuteRate),
-                  s"${entry._1}_fiveMinRate"    -> new DoubleZ(entry._2.getFiveMinuteRate),
-                  s"${entry._1}_fifteenMinRate" -> new DoubleZ(entry._2.getFifteenMinuteRate)
+                  s"${entry._1}_count"          -> LongZ(entry._2.getCount),
+                  s"${entry._1}_meanRate"       -> DoubleZ(entry._2.getMeanRate),
+                  s"${entry._1}_oneMinRate"     -> DoubleZ(entry._2.getOneMinuteRate),
+                  s"${entry._1}_fiveMinRate"    -> DoubleZ(entry._2.getFiveMinuteRate),
+                  s"${entry._1}_fifteenMinRate" -> DoubleZ(entry._2.getFifteenMinuteRate)
                 ) ++ extractSnapshot(entry._1, entry._2.getSnapshot)
               )
           )
@@ -150,7 +153,7 @@ object Reporter {
             entry =>
               entry._1 -> Right(
                 Map(
-                  s"${entry._1}_count" -> new LongZ(entry._2.getCount)
+                  s"${entry._1}_count" -> LongZ(entry._2.getCount)
                 ) ++ extractSnapshot(entry._1, entry._2.getSnapshot)
               )
           )
@@ -165,11 +168,11 @@ object Reporter {
             entry =>
               entry._1 -> Right(
                 Map(
-                  s"${entry._1}_count"          -> new LongZ(entry._2.getCount),
-                  s"${entry._1}_meanRate"       -> new DoubleZ(entry._2.getMeanRate),
-                  s"${entry._1}_oneMinRate"     -> new DoubleZ(entry._2.getOneMinuteRate),
-                  s"${entry._1}_fiveMinRate"    -> new DoubleZ(entry._2.getFiveMinuteRate),
-                  s"${entry._1}_fifteenMinRate" -> new DoubleZ(entry._2.getFifteenMinuteRate)
+                  s"${entry._1}_count"          -> LongZ(entry._2.getCount),
+                  s"${entry._1}_meanRate"       -> DoubleZ(entry._2.getMeanRate),
+                  s"${entry._1}_oneMinRate"     -> DoubleZ(entry._2.getOneMinuteRate),
+                  s"${entry._1}_fiveMinRate"    -> DoubleZ(entry._2.getFiveMinuteRate),
+                  s"${entry._1}_fifteenMinRate" -> DoubleZ(entry._2.getFifteenMinuteRate)
                 )
               )
           )
