@@ -22,15 +22,16 @@ object DropwizardTests extends RTS {
       r <- a(None)
     } yield r
 
-  val testTimer: IO[IOException, List[Long]] = for {
+  val testTimer: IO[IOException, List[Double]] = for {
     t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
+    t1 = t.start
     l <- IO.foreach(
           List(
             Thread.sleep(1000L),
             Thread.sleep(1400L),
             Thread.sleep(1200L)
           )
-        )(a => t.stop(t.apply))
+        )(a => t.stop(t1))
   } yield l
 
   val testHistogram: IO[IOException, Unit] = {
@@ -84,7 +85,7 @@ object DropwizardTests extends RTS {
 
         assert(counter == 3)
       },
-      test("Timer mean rate within bounds") { () =>
+      test("Timer mean rate for 6 calls within bounds") { () =>
         unsafeRun(testTimer)
         val meanRate = dropwizardMetrics.registry
           .getTimers()

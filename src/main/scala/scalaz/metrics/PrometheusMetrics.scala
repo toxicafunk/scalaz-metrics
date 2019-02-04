@@ -2,13 +2,13 @@ package scalaz.metrics
 
 import java.io.IOException
 
-import io.prometheus.client.{CollectorRegistry, Counter, Gauge, Histogram}
+import io.prometheus.client._
 import scalaz.metrics.Label._
-import scalaz.metrics.Reservoir.{Config, Bounded, ExponentiallyDecaying, Uniform}
+import scalaz.metrics.Reservoir.{ Bounded, Config, ExponentiallyDecaying, Uniform }
 import scalaz.zio.IO
-import scalaz.{Semigroup, Show}
+import scalaz.{ Semigroup, Show }
 
-class PrometheusMetrics extends Metrics[IO[IOException, ?], Nothing] {
+class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
 
   val registry: CollectorRegistry = CollectorRegistry.defaultRegistry
 
@@ -56,27 +56,31 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Nothing] {
     IO.sync((a: A) => IO.sync(h.observe(num.toDouble(a))))
   }
 
-  def processConfig(config: Option[Config], values: Tuple3[String, String, String]): Tuple3[Double, Double, Int] = config match {
-    case None => (1.0, 1.0, 1)
-    case Some(m) =>
-      val d1 = m.getOrElse(values._1, DoubleZ(1.0)) match {
-        case DoubleZ(d) => d
-        case _ => 1.0
-      }
+  def processConfig(config: Option[Config], values: Tuple3[String, String, String]): Tuple3[Double, Double, Int] =
+    config match {
+      case None => (1.0, 1.0, 1)
+      case Some(m) =>
+        val d1 = m.getOrElse(values._1, DoubleZ(1.0)) match {
+          case DoubleZ(d) => d
+          case _          => 1.0
+        }
 
-      val d2: Double = m.getOrElse(values._2, DoubleZ(1.0)) match {
-        case DoubleZ(d) => d
-        case _ => 1.0
-      }
+        val d2: Double = m.getOrElse(values._2, DoubleZ(1.0)) match {
+          case DoubleZ(d) => d
+          case _          => 1.0
+        }
 
-      val i1: Int = m.getOrElse(values._3, IntegerZ(1)) match {
-        case IntegerZ(i) => i
-        case _ => 1
-      }
-      (d1, d2, i1)
-  }
+        val i1: Int = m.getOrElse(values._3, IntegerZ(1)) match {
+          case IntegerZ(i) => i
+          case _           => 1
+        }
+        (d1, d2, i1)
+    }
 
-  def histogramTimer[A: scala.Numeric, L: Show](label: Label[L], res: Reservoir[A] = Reservoir.ExponentiallyDecaying(None)): MetriczIO[() => MetriczIO[Unit]] = {
+  def histogramTimer[A: scala.Numeric, L: Show](
+    label: Label[L],
+    res: Reservoir[A] = Reservoir.ExponentiallyDecaying(None)
+  ): MetriczIO[() => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val hb = Histogram
       .build()
@@ -84,29 +88,46 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Nothing] {
       .help(s"$lbl histogram")
 
     val builder = res match {
-      case Uniform(config)               =>
+      case Uniform(config) =>
         val c = processConfig(config, ("start", "width", "count"))
         hb.linearBuckets(c._1, c._2, c._3)
       case ExponentiallyDecaying(config) =>
         val c = processConfig(config, ("start", "factor", "count"))
         hb.exponentialBuckets(c._1, c._2, c._3)
-      case Bounded(window@_, unit@_) => hb
+      case Bounded(window @ _, unit @ _) => hb
     }
 
     val h = builder.register()
 
-    IO.sync( {
+    IO.sync({
       val timer = h.startTimer()
-      () => IO.sync({
-        timer.observeDuration()
-        ()
-      })
+      () =>
+        IO.sync({
+          timer.observeDuration()
+          ()
+        })
     })
   }
 
-  override def timer[L: Show](
-    label: Label[L]
-  ): IO[IOException, Timer[MetriczIO[?], Nothing]] = ???
+  type SummaryTimer = Summary.Timer
+
+  class IOTimer(val ctx: SummaryTimer) extends Timer[MetriczIO[?], SummaryTimer] {
+    override val a: SummaryTimer                = ctx
+    override def start: MetriczIO[SummaryTimer] = IO.succeed(a)
+    override def stop(io: MetriczIO[SummaryTimer]): MetriczIO[Double] =
+      io.map(c => c.observeDuration())
+  }
+
+  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[MetriczIO[?], SummaryTimer]] = {
+    val lbl = Show[Label[L]].shows(label)
+    val iot = IO.succeed(Summary
+      .build()
+      .name(lbl)
+      .help(s"$lbl timer")
+      .register())
+    val r = iot.map(s => new IOTimer(s.startTimer()))
+    r
+  }
 
   override def meter[L: Show](
     label: Label[L]

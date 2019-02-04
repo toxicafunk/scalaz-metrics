@@ -27,13 +27,14 @@ object TestMetricsService extends RTS {
       _ <- f(2)
       _ <- metrics.gauge(Label(Array("test", "gauge")))(tester)
       t <- metrics.timer(Label(Array("test", "timer")))
+      t1 = t.start
       l <- IO.foreach(
             List(
               Thread.sleep(1000L),
               Thread.sleep(1400L),
               Thread.sleep(1200L)
             )
-          )(a => t.stop(t.apply))
+          )(a => t.stop(t1))
       h <- metrics.histogram(Label(Array("test", "histogram")))
       _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
       m <- metrics.meter(Label(Array("test", "meter")))

@@ -20,13 +20,14 @@ object DropwizardMetricsSpec extends App {
       g <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(tester)
       _ <- g(None)
       t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
+      t1 = t.start
       l <- IO.foreach(
             List(
               Thread.sleep(1000L),
               Thread.sleep(1400L),
               Thread.sleep(1200L)
             )
-          )(a => t.stop(t.apply))
+          )(a => t.stop(t1))
       h <- dropwizardMetrics.histogram(Label(Array("test", "histogram")))
       _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
       m <- dropwizardMetrics.meter(Label(Array("test", "meter")))

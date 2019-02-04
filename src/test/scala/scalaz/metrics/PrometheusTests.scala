@@ -2,7 +2,6 @@ package scalaz.metrics
 
 import java.io.IOException
 import java.util
-import java.util.{HashSet, Set}
 
 import scalaz.std.string.stringInstance
 import scalaz.Scalaz._
@@ -27,16 +26,17 @@ object PrometheusTests extends RTS {
       b <- g((-3.0).some)
     } yield b
 
-  /*val testTimer: IO[IOException, List[Long]] = for {
-    t <- prometheusMetrics.timer(Label(Array("test", "timer")))
-    l <- IO.traverse(
+  val testTimer: IO[IOException, List[Double]] = for {
+    t <- prometheusMetrics.timer(Label(Array("test", "timer"), ""))
+    t1 = t.start
+    l <- IO.foreach(
           List(
             Thread.sleep(1000L),
             Thread.sleep(1400L),
             Thread.sleep(1200L)
           )
-        )(a => t.stop(t.apply))
-  } yield l*/
+        )(a => t.stop(t1))
+  } yield l
 
   val testHistogram: IO[IOException, Unit] = {
     import scala.math.Numeric.IntIsIntegral
@@ -76,34 +76,29 @@ object PrometheusTests extends RTS {
       test("gauge returns latest value") { () =>
         val tester: Option[Double] => Double = (op: Option[Double]) => op.get
         unsafeRun(testGauge(tester))
-        val set: Set[String] = new HashSet[String]()
+        val set: util.Set[String] = new util.HashSet[String]()
         set.add("testgauge")
         val a1 = prometheusMetrics.registry
           .filteredMetricFamilySamples(set).nextElement().samples.get(0).value
 
         assert(a1 == 2.0)
       },
-      /*test("Timer called 3 times") { () =>
+      test("Timer called 3 times") { () =>
         unsafeRun(testTimer)
-        val counter = prometheusMetrics.registry
-          .getTimers()
-          .get("test.timer")
-          .getCount
+        val set: util.Set[String] = new util.HashSet[String]()
+        set.add("testtimer_count")
+        set.add("testtimer_sum")
+        val count = prometheusMetrics.registry
+          .filteredMetricFamilySamples(set).nextElement().samples.get(0).value
+        val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
 
-        assert(counter == 3)
+        println(s"Sum: $sum")
+        assert(count == 3.0)
+        assert(sum >= 3.6)
       },
-      test("Timer mean rate within bounds") { () =>
-        unsafeRun(testTimer)
-        val meanRate = prometheusMetrics.registry
-          .getTimers()
-          .get("test.timer")
-          .getMeanRate
-
-        assert(meanRate > 0.78 && meanRate < 0.84)
-      },*/
       test("Histogram sum is 161 and count is 5") { () =>
         unsafeRun(testHistogram)
-        val set: Set[String] = new HashSet[String]()
+        val set: util.Set[String] = new util.HashSet[String]()
         set.add("testhist_count")
         set.add("testhist_sum")
         val count = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(0).value
@@ -113,7 +108,7 @@ object PrometheusTests extends RTS {
       },
       test("Histogram timer") { () =>
         unsafeRun(testHistogramTimer)
-        val set: Set[String] = new HashSet[String]()
+        val set: util.Set[String] = new util.HashSet[String]()
         set.add("testtid_count")
         set.add("testtid_sum")
         val count = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(0).value

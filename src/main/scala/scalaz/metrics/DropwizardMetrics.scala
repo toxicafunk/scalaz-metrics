@@ -44,9 +44,9 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
 
   class IOTimer(val ctx: Context) extends Timer[MetriczIO[?], Context] {
     override val a: Context                = ctx
-    override def apply: MetriczIO[Context] = IO.succeedLazy(a)
-    override def stop(io: MetriczIO[Context]): MetriczIO[Long] =
-      io.map(c => c.stop())
+    override def start: MetriczIO[Context] = IO.succeed(a)
+    override def stop(io: MetriczIO[Context]): MetriczIO[Double] =
+      io.map(c => c.stop().toDouble)
   }
 
   override def timer[L: Show](label: Label[L]): IO[IOException, Timer[MetriczIO[?], Context]] = {

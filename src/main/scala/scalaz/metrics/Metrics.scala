@@ -15,8 +15,8 @@ object Reservoir {
 
 trait Timer[F[_], A] {type Config = Map[String, A]
   val a: A
-  def apply: F[A]
-  def stop(io: F[A]): F[Long]
+  def start: F[A]
+  def stop(io: F[A]): F[Double]
 }
 
 trait HtmlRender[A] {
