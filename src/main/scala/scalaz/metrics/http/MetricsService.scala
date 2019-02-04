@@ -1,4 +1,4 @@
-package scalaz.http
+package scalaz.metrics.http
 
 import argonaut.Argonaut.jSingleObject
 import argonaut.Json

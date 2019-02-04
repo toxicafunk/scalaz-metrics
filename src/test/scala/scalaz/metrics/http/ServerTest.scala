@@ -5,7 +5,6 @@ import com.codahale.metrics.jmx.JmxReporter
 import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.{Request, Response}
-import scalaz.http.{MetricsService, StaticService}
 import scalaz.metrics.DropwizardMetrics
 import scalaz.zio.{App, Clock, IO}
 import scalaz.zio.interop.Task

@@ -1,6 +1,8 @@
-package scalaz
+package scalaz.metrics
+
 import argonaut.Argonaut.jEmptyObject
 import argonaut.Json
+import scalaz.Monoid
 
 package object http {
 

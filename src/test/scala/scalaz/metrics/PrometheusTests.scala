@@ -6,7 +6,7 @@ import java.util
 import scalaz.std.string.stringInstance
 import scalaz.Scalaz._
 import scalaz.zio.{IO, RTS}
-import testz.{Harness, PureHarness, assert}
+import testz.{Harness, PureHarness, Result, assert}
 import scalaz.metrics.PrometheusMetrics.DoubleSemigroup
 
 object PrometheusTests extends RTS {
@@ -57,10 +57,10 @@ object PrometheusTests extends RTS {
     } yield ()
   }
 
-  /*val testMeter: IO[IOException, Unit] = for {
-    m <- prometheusMetrics.meter(Label(Array("test", "meter")))
-    _ <- IO.traverse(1 to 5)(i => IO.now(m(1)))
-  } yield ()*/
+  val testMeter: IO[IOException, Unit] = for {
+    m <- prometheusMetrics.meter(Label(Array("test", "meter"), ""))
+    _ <- IO.foreach(1 to 5)(i => IO.succeed(m(2)))
+  } yield ()
 
   def tests[T](harness: Harness[T]): T = {
     import harness._
@@ -92,19 +92,17 @@ object PrometheusTests extends RTS {
           .filteredMetricFamilySamples(set).nextElement().samples.get(0).value
         val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
 
-        println(s"Sum: $sum")
-        assert(count == 3.0)
-        assert(sum >= 3.6)
+        Result.combine(assert(count == 3.0), assert(sum >= 3.6))
       },
       test("Histogram sum is 161 and count is 5") { () =>
         unsafeRun(testHistogram)
         val set: util.Set[String] = new util.HashSet[String]()
         set.add("testhist_count")
         set.add("testhist_sum")
+
         val count = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(0).value
-        assert(count == 5.0)
         val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
-        assert(sum == 161.0)
+        Result.combine(assert(count == 5.0), assert(sum == 161.0))
       },
       test("Histogram timer") { () =>
         unsafeRun(testHistogramTimer)
@@ -112,28 +110,19 @@ object PrometheusTests extends RTS {
         set.add("testtid_count")
         set.add("testtid_sum")
         val count = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(0).value
-        assert(count == 5.0)
+
         val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
-        assert(sum > 2.5)
+        Result.combine(assert(count == 5.0), assert(sum > 2.5))
       },
-      /*test("Meter invoked 5 times") { () =>
+      test("Meter invoked 5 times") { () =>
         unsafeRun(testMeter)
-        val counter = prometheusMetrics.registry
-          .getMeters()
-          .get("test.meter")
-          .getCount
-
-        assert(counter == 5)
-      },
-      test("Meter mean rate within bounds") { () =>
-        unsafeRun(testMeter)
-        val meanRate = prometheusMetrics.registry
-          .getMeters()
-          .get("test.meter")
-          .getMeanRate
-
-        assert(meanRate > 720 && meanRate < 9000)
-      }*/
+        val set: util.Set[String] = new util.HashSet[String]()
+        set.add("testmeter_count")
+        set.add("testmeter_sum")
+        val count = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(0).value
+        val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
+        Result.combine(assert(count == 5.0), assert(sum >= 10.0))
+      }
     )
   }
 

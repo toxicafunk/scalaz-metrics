@@ -5,7 +5,7 @@ import Argonaut._
 import argonaut.Json
 import com.codahale.metrics.{MetricFilter, MetricRegistry, Snapshot}
 import scalaz._
-import scalaz.zio.Clock
+//import scalaz.zio.Clock
 
 import scala.collection.JavaConverters._
 
@@ -17,9 +17,17 @@ trait Reporter[F[_], A] {
   val extractMeters: MetricFilter => MetricRegistry => F[A]
 }
 
+/*trait DropwizardReporter[F[_], A] extends Reporter[F[_], A] {
+  val extractCounters: MetricFilter => MetricRegistry => F[A]
+  val extractGauges: MetricFilter => MetricRegistry => F[A]
+  val extractTimers: MetricFilter => MetricRegistry => F[A]
+  val extractHistograms: MetricFilter => MetricRegistry => F[A]
+  val extractMeters: MetricFilter => MetricRegistry => F[A]
+}*/
+
 object Reporter {
 
-  implicit val clock: Clock = Clock.Live
+  //implicit val clock: Clock = Clock.Live
 
   implicit val jsonReporter: Reporter[List, Json] = new Reporter[List, Json] {
     override val extractCounters: MetricFilter => MetricRegistry => List[Json] = (filter: MetricFilter) =>

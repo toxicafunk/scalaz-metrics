@@ -1,4 +1,4 @@
-package scalaz.http
+package scalaz.metrics.http
 
 import cats.data.Kleisli
 import org.http4s.{ Request, Response }
