@@ -9,11 +9,12 @@ import scalaz.zio.Clock
 import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
+import scala.concurrent.{ ExecutionContext, ExecutionContextExecutorService }
 
 object StaticService {
 
-  val blockingEc: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4))
+  val blockingEc: ExecutionContextExecutorService =
+    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4))
 
   implicit val clock: Clock = Clock.Live
 

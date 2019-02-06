@@ -33,14 +33,14 @@ lazy val root =
     )
 
 libraryDependencies ++= Seq(
-  "org.scalaz" %% "scalaz-core"                   % "7.2.25",
-  "org.scalaz" %% "scalaz-zio"                    % "0.6.0",
-  "org.scalaz" %% "scalaz-zio-interop-cats"       % "0.6.0",
-  "org.scalaz" %% "scalaz-zio"                    % "0.6.0",
-  "org.scalaz" %% "scalaz-zio-interop-cats"       % "0.6.0",
-  "org.scalaz" %% "scalaz-zio-interop-scalaz7x"   % "0.6.0",
-  "org.scalaz" %% "testz-core"                    % "0.0.5",
-  "org.scalaz" %% "testz-stdlib"                  % "0.0.5"
+  "org.scalaz" %% "scalaz-core"                 % "7.2.25",
+  "org.scalaz" %% "scalaz-zio"                  % "0.6.0",
+  "org.scalaz" %% "scalaz-zio-interop-cats"     % "0.6.0",
+  "org.scalaz" %% "scalaz-zio"                  % "0.6.0",
+  "org.scalaz" %% "scalaz-zio-interop-cats"     % "0.6.0",
+  "org.scalaz" %% "scalaz-zio-interop-scalaz7x" % "0.6.0",
+  "org.scalaz" %% "testz-core"                  % "0.0.5",
+  "org.scalaz" %% "testz-stdlib"                % "0.0.5"
 )
 
 libraryDependencies ++= Seq(

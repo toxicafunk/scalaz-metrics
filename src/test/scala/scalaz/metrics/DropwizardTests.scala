@@ -23,7 +23,7 @@ object DropwizardTests extends RTS {
     } yield r
 
   val testTimer: IO[IOException, List[Double]] = for {
-    t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
+    t  <- dropwizardMetrics.timer(Label(Array("test", "timer")))
     t1 = t.start
     l <- IO.foreach(
           List(

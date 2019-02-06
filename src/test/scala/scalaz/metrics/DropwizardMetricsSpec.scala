@@ -14,12 +14,12 @@ object DropwizardMetricsSpec extends App {
 
   def performTests: IO[IOException, Unit] =
     for {
-      f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
-      _ <- f(1)
-      _ <- f(2)
-      g <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(tester)
-      _ <- g(None)
-      t <- dropwizardMetrics.timer(Label(Array("test", "timer")))
+      f  <- dropwizardMetrics.counter(Label(Array("test", "counter")))
+      _  <- f(1)
+      _  <- f(2)
+      g  <- dropwizardMetrics.gauge(Label(Array("test", "gauge")))(tester)
+      _  <- g(None)
+      t  <- dropwizardMetrics.timer(Label(Array("test", "timer")))
       t1 = t.start
       l <- IO.foreach(
             List(

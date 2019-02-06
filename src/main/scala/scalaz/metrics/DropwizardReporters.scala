@@ -9,27 +9,28 @@ import scala.collection.JavaConverters._
 
 object DropwizardReporters {
 
-  implicit val dropwizardReportPrinter: ReportPrinter[Context, DropwizardMetrics] = new ReportPrinter[Context, DropwizardMetrics] {
-    override def report[F[_], A](metrics: DropwizardMetrics, filter: Option[String])(
-      cons: (String, A) => A
-    )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[Context, DropwizardMetrics, F, A]): A = {
+  implicit val dropwizardReportPrinter: ReportPrinter[Context, DropwizardMetrics] =
+    new ReportPrinter[Context, DropwizardMetrics] {
+      override def report[F[_], A](metrics: DropwizardMetrics, filter: Option[String])(
+        cons: (String, A) => A
+      )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[Context, DropwizardMetrics, F, A]): A = {
 
-      import scalaz.syntax.semigroup._
+        import scalaz.syntax.semigroup._
 
-      val fs = List(
-        ("counters", R.extractCounters),
-        ("gauges", R.extractGauges),
-        ("timers", R.extractTimers),
-        ("histograms", R.extractHistograms),
-        ("meters", R.extractMeters)
-      )
+        val fs = List(
+          ("counters", R.extractCounters),
+          ("gauges", R.extractGauges),
+          ("timers", R.extractTimers),
+          ("histograms", R.extractHistograms),
+          ("meters", R.extractMeters)
+        )
 
-      fs.foldLeft(M.zero)((acc0, f) => {
-        val m = f._2(metrics)(filter)
-        acc0 |+| L.foldMap(m)(a => cons(f._1, a))
-      })
+        fs.foldLeft(M.zero)((acc0, f) => {
+          val m = f._2(metrics)(filter)
+          acc0 |+| L.foldMap(m)(a => cons(f._1, a))
+        })
+      }
     }
-  }
 
   implicit val jsonDWReporter: Reporter[Context, DropwizardMetrics, List, Json] =
     new Reporter[Context, DropwizardMetrics, List, Json] {
@@ -42,7 +43,7 @@ object DropwizardReporters {
               .asScala
               .map(entry => jSingleObject(entry._1, jNumber(entry._2.getCount)))
               .toList
-        }
+          }
 
       override val extractGauges: DropwizardMetrics => Filter => List[Json] =
         (metrics: DropwizardMetrics) =>
@@ -53,7 +54,7 @@ object DropwizardReporters {
               .asScala
               .map(entry => jSingleObject(entry._1, jString(entry._2.getValue.toString)))
               .toList
-        }
+          }
 
       def extractSnapshot(name: String, snapshot: Snapshot): Json =
         Json(
@@ -86,7 +87,7 @@ object DropwizardReporters {
                 ).deepmerge(extractSnapshot(entry._1, entry._2.getSnapshot))
               })
               .toList
-        }
+          }
 
       override val extractHistograms: DropwizardMetrics => Filter => List[Json] =
         (metrics: DropwizardMetrics) =>
@@ -100,7 +101,7 @@ object DropwizardReporters {
                   extractSnapshot(entry._1, entry._2.getSnapshot)
               })
               .toList
-        }
+          }
 
       override val extractMeters: DropwizardMetrics => Filter => List[Json] =
         (metrics: DropwizardMetrics) =>
@@ -119,7 +120,7 @@ object DropwizardReporters {
                 )
               })
               .toList
-        }
+          }
     }
 
   type MapEither = Either[Measurable, Map[String, Measurable]]
@@ -135,7 +136,7 @@ object DropwizardReporters {
               .asScala
               .map(entry => entry._1 -> Left(LongZ(entry._2.getCount)))
               .toMap
-        }
+          }
 
       override val extractGauges: DropwizardMetrics => Filter => Map[String, MapEither] =
         (metrics: DropwizardMetrics) =>
@@ -146,7 +147,7 @@ object DropwizardReporters {
               .asScala
               .map(entry => entry._1 -> Left(StringZ(entry._2.getValue.toString)))
               .toMap
-        }
+          }
 
       def extractSnapshot(name: String, snapshot: Snapshot): Map[String, Measurable] =
         Map(
@@ -179,10 +180,10 @@ object DropwizardReporters {
                       s"${entry._1}_fiveMinRate"    -> DoubleZ(entry._2.getFiveMinuteRate),
                       s"${entry._1}_fifteenMinRate" -> DoubleZ(entry._2.getFifteenMinuteRate)
                     ) ++ extractSnapshot(entry._1, entry._2.getSnapshot)
-                )
+                  )
               )
               .toMap
-        }
+          }
 
       override val extractHistograms: DropwizardMetrics => Filter => Map[String, MapEither] =
         (metrics: DropwizardMetrics) =>
@@ -197,10 +198,10 @@ object DropwizardReporters {
                     Map(
                       s"${entry._1}_count" -> LongZ(entry._2.getCount)
                     ) ++ extractSnapshot(entry._1, entry._2.getSnapshot)
-                )
+                  )
               )
               .toMap
-        }
+          }
 
       override val extractMeters: DropwizardMetrics => Filter => Map[String, MapEither] =
         (metrics: DropwizardMetrics) =>
@@ -219,9 +220,9 @@ object DropwizardReporters {
                       s"${entry._1}_fiveMinRate"    -> DoubleZ(entry._2.getFiveMinuteRate),
                       s"${entry._1}_fifteenMinRate" -> DoubleZ(entry._2.getFifteenMinuteRate)
                     )
-                )
+                  )
               )
               .toMap
-        }
+          }
     }
 }

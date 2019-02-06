@@ -5,8 +5,8 @@ import java.util
 
 import scalaz.std.string.stringInstance
 import scalaz.Scalaz._
-import scalaz.zio.{IO, RTS}
-import testz.{Harness, PureHarness, Result, assert}
+import scalaz.zio.{ IO, RTS }
+import testz.{ assert, Harness, PureHarness, Result }
 import scalaz.metrics.PrometheusMetrics.DoubleSemigroup
 
 object PrometheusTests extends RTS {
@@ -27,7 +27,7 @@ object PrometheusTests extends RTS {
     } yield b
 
   val testTimer: IO[IOException, List[Double]] = for {
-    t <- prometheusMetrics.timer(Label(Array("test", "timer"), ""))
+    t  <- prometheusMetrics.timer(Label(Array("test", "timer"), ""))
     t1 = t.start
     l <- IO.foreach(
           List(
@@ -51,9 +51,9 @@ object PrometheusTests extends RTS {
     for {
       h <- prometheusMetrics.histogramTimer(Label(Array("test", "tid"), ""))
       _ <- IO.foreach(List(h(), h(), h(), h(), h()))(io => {
-        Thread.sleep(500)
-        io.void
-      })
+            Thread.sleep(500)
+            io.void
+          })
     } yield ()
   }
 
@@ -70,7 +70,11 @@ object PrometheusTests extends RTS {
         val set: util.Set[String] = new util.HashSet[String]()
         set.add("testcounter")
         val counter = prometheusMetrics.registry
-          .filteredMetricFamilySamples(set).nextElement().samples.get(0).value
+          .filteredMetricFamilySamples(set)
+          .nextElement()
+          .samples
+          .get(0)
+          .value
         assert(counter == 3.0)
       },
       test("gauge returns latest value") { () =>
@@ -79,7 +83,11 @@ object PrometheusTests extends RTS {
         val set: util.Set[String] = new util.HashSet[String]()
         set.add("testgauge")
         val a1 = prometheusMetrics.registry
-          .filteredMetricFamilySamples(set).nextElement().samples.get(0).value
+          .filteredMetricFamilySamples(set)
+          .nextElement()
+          .samples
+          .get(0)
+          .value
 
         assert(a1 == 2.0)
       },
@@ -89,7 +97,11 @@ object PrometheusTests extends RTS {
         set.add("testtimer_count")
         set.add("testtimer_sum")
         val count = prometheusMetrics.registry
-          .filteredMetricFamilySamples(set).nextElement().samples.get(0).value
+          .filteredMetricFamilySamples(set)
+          .nextElement()
+          .samples
+          .get(0)
+          .value
         val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
 
         Result.combine(assert(count == 3.0), assert(sum >= 3.6))
@@ -101,7 +113,7 @@ object PrometheusTests extends RTS {
         set.add("testhist_sum")
 
         val count = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(0).value
-        val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
+        val sum   = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
         Result.combine(assert(count == 5.0), assert(sum == 161.0))
       },
       test("Histogram timer") { () =>
@@ -120,7 +132,7 @@ object PrometheusTests extends RTS {
         set.add("testmeter_count")
         set.add("testmeter_sum")
         val count = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(0).value
-        val sum = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
+        val sum   = prometheusMetrics.registry.filteredMetricFamilySamples(set).nextElement().samples.get(1).value
         Result.combine(assert(count == 5.0), assert(sum >= 10.0))
       }
     )

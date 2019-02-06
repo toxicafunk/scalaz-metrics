@@ -120,22 +120,26 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
 
   override def timer[L: Show](label: Label[L]): IO[IOException, Timer[MetriczIO[?], SummaryTimer]] = {
     val lbl = Show[Label[L]].shows(label)
-    val iot = IO.succeed(Summary
-      .build()
-      .name(lbl)
-      .help(s"$lbl timer")
-      .register())
+    val iot = IO.succeed(
+      Summary
+        .build()
+        .name(lbl)
+        .help(s"$lbl timer")
+        .register()
+    )
     val r = iot.map(s => new IOTimer(s.startTimer()))
     r
   }
 
   override def meter[L: Show](label: Label[L]): IO[IOException, Double => IO[IOException, Unit]] = {
     val lbl = Show[Label[L]].shows(label)
-    val iot = IO.succeed(Summary
-      .build()
-      .name(lbl)
-      .help(s"$lbl timer")
-      .register())
+    val iot = IO.succeed(
+      Summary
+        .build()
+        .name(lbl)
+        .help(s"$lbl timer")
+        .register()
+    )
     IO.sync(d => iot.map(s => s.observe(d)))
   }
 

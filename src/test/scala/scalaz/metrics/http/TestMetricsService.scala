@@ -21,11 +21,11 @@ object TestMetricsService extends RTS {
 
   def performTests[Ctx](metrics: Metrics[IO[IOException, ?], Ctx]): IO[IOException, String] =
     for {
-      f <- metrics.counter(Label(Array("test", "counter"), "_"))
-      _ <- f(1)
-      _ <- f(2)
-      _ <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
-      t <- metrics.timer(Label(Array("test", "timer"), "_"))
+      f  <- metrics.counter(Label(Array("test", "counter"), "_"))
+      _  <- f(1)
+      _  <- f(2)
+      _  <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
+      t  <- metrics.timer(Label(Array("test", "timer"), "_"))
       t1 = t.start
       l <- IO.foreach(
             List(
@@ -40,14 +40,15 @@ object TestMetricsService extends RTS {
       _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
     } yield { s"time $l ns" }
 
-  def service[Ctx] = (metrics: Metrics[IO[IOException, ?], Ctx]) =>
-    HttpRoutes.of[Task] {
-      case GET -> Root =>
-        val m = performTests(metrics).attempt
-          .map(ei => {
-            ei.fold(_ => "failure encountered", s => s)
-          })
+  def service[Ctx] =
+    (metrics: Metrics[IO[IOException, ?], Ctx]) =>
+      HttpRoutes.of[Task] {
+        case GET -> Root =>
+          val m = performTests(metrics).attempt
+            .map(ei => {
+              ei.fold(_ => "failure encountered", s => s)
+            })
 
-        Task(Response[Task](Ok).withEntity(unsafeRun(m)))
-  }
+          Task(Response[Task](Ok).withEntity(unsafeRun(m)))
+      }
 }

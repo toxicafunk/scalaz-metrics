@@ -65,9 +65,9 @@ class DropwizardMetrics extends Metrics[IO[IOException, ?], Context] {
   ): MetriczIO[A => MetriczIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val reservoir: DWReservoir = res match {
-      case Uniform(config@_)               => new UniformReservoir
-      case ExponentiallyDecaying(config@_) => new ExponentiallyDecayingReservoir
-      case Bounded(window, unit) => new SlidingTimeWindowReservoir(window, unit)
+      case Uniform(config @ _)               => new UniformReservoir
+      case ExponentiallyDecaying(config @ _) => new ExponentiallyDecayingReservoir
+      case Bounded(window, unit)             => new SlidingTimeWindowReservoir(window, unit)
     }
     val supplier = new MetricSupplier[Histogram] {
       override def newMetric(): Histogram = new Histogram(reservoir)

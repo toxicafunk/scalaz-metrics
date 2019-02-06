@@ -4,9 +4,9 @@ import cats.data.Kleisli
 import com.codahale.metrics.jmx.JmxReporter
 import org.http4s.server.Router
 import org.http4s.server.blaze._
-import org.http4s.{Request, Response}
+import org.http4s.{ Request, Response }
 import scalaz.metrics.DropwizardMetrics
-import scalaz.zio.{App, Clock, IO}
+import scalaz.zio.{ App, Clock, IO }
 import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
 import org.http4s.implicits._
@@ -24,14 +24,15 @@ object DropwizardServerTest extends App {
   val reporter: JmxReporter = JmxReporter.forRegistry(metrics.registry).build
   reporter.start()
 
-  def httpApp[A]: DropwizardMetrics => Kleisli[Task, Request[Task], Response[Task]] = (metrics: DropwizardMetrics) =>
-    Router(
-      "/"        -> StaticService.service,
-      "/metrics" -> DropwizardMetricsService.service(metrics),
-      "/measure" -> TestMetricsService.service(metrics)
-    ).orNotFound
+  def httpApp[A]: DropwizardMetrics => Kleisli[Task, Request[Task], Response[Task]] =
+    (metrics: DropwizardMetrics) =>
+      Router(
+        "/"        -> StaticService.service,
+        "/metrics" -> DropwizardMetricsService.service(metrics),
+        "/measure" -> TestMetricsService.service(metrics)
+      ).orNotFound
 
-  override def run(args: List[String]): IO[Nothing, ExitStatus] = {
+  override def run(args: List[String]): IO[Nothing, ExitStatus] =
     BlazeServerBuilder[Task]
       .bindHttp(port)
       .withHttpApp(httpApp(metrics))
@@ -40,5 +41,4 @@ object DropwizardServerTest extends App {
       .drain
       .run
       .map(_ => ExitStatus.ExitNow(0))
-  }
 }
