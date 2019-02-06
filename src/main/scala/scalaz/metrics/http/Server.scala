@@ -19,7 +19,7 @@ object Server {
   val httpApp: DropwizardMetrics => Kleisli[Task, Request[Task], Response[Task]] = (metrics: DropwizardMetrics) =>
     Router(
       "/"        -> StaticService.service,
-      "/metrics" -> MetricsService.service(metrics)
+      "/metrics" -> DropwizardMetricsService.service(metrics)
     ).orNotFound
 
   val builder: DropwizardMetrics => Task[Unit] = (metrics: DropwizardMetrics) =>

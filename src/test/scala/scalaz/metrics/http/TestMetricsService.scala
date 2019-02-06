@@ -2,7 +2,6 @@ package scalaz.metrics.http
 
 import java.io.IOException
 
-import com.codahale.metrics.Timer.Context
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
 import org.http4s.{ HttpRoutes, Response }
@@ -20,13 +19,13 @@ object TestMetricsService extends RTS {
   val s: Stream[Int]               = Stream.from(1)
   val tester: Option[Unit] => Long = (op: Option[Unit]) => s.takeWhile(_ < 10).head.toLong
 
-  def performTests(metrics: Metrics[IO[IOException, ?], Context]): IO[IOException, String] =
+  def performTests[Ctx](metrics: Metrics[IO[IOException, ?], Ctx]): IO[IOException, String] =
     for {
-      f <- metrics.counter(Label(Array("test", "counter")))
+      f <- metrics.counter(Label(Array("test", "counter"), "_"))
       _ <- f(1)
       _ <- f(2)
-      _ <- metrics.gauge(Label(Array("test", "gauge")))(tester)
-      t <- metrics.timer(Label(Array("test", "timer")))
+      _ <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
+      t <- metrics.timer(Label(Array("test", "timer"), "_"))
       t1 = t.start
       l <- IO.foreach(
             List(
@@ -35,13 +34,13 @@ object TestMetricsService extends RTS {
               Thread.sleep(1200L)
             )
           )(a => t.stop(t1))
-      h <- metrics.histogram(Label(Array("test", "histogram")))
+      h <- metrics.histogram(Label(Array("test", "histogram"), "_"))
       _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
-      m <- metrics.meter(Label(Array("test", "meter")))
+      m <- metrics.meter(Label(Array("test", "meter"), "_"))
       _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
     } yield { s"time $l ns" }
 
-  val service = (metrics: Metrics[IO[IOException, ?], Context]) =>
+  def service[Ctx] = (metrics: Metrics[IO[IOException, ?], Ctx]) =>
     HttpRoutes.of[Task] {
       case GET -> Root =>
         val m = performTests(metrics).attempt

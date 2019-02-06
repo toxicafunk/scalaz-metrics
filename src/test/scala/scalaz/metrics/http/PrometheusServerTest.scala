@@ -1,33 +1,29 @@
 package scalaz.metrics.http
 
 import cats.data.Kleisli
-import com.codahale.metrics.jmx.JmxReporter
+import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.{Request, Response}
-import scalaz.metrics.DropwizardMetrics
-import scalaz.zio.{App, Clock, IO}
+import scalaz.metrics.PrometheusMetrics
 import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
-import org.http4s.implicits._
+import scalaz.zio.{App, Clock, IO}
 
 import scala.util.Properties.envOrNone
 
-object ServerTest extends App {
+object PrometheusServerTest extends App {
   val port: Int = envOrNone("HTTP_PORT").fold(9090)(_.toInt)
   println(s"Starting server on port $port")
 
   implicit val clock: Clock = Clock.Live
 
-  val metrics = new DropwizardMetrics
+  val metrics = new PrometheusMetrics
 
-  val reporter: JmxReporter = JmxReporter.forRegistry(metrics.registry).build
-  reporter.start()
-
-  val httpApp: DropwizardMetrics => Kleisli[Task, Request[Task], Response[Task]] = (metrics: DropwizardMetrics) =>
+  def httpApp[A]: PrometheusMetrics => Kleisli[Task, Request[Task], Response[Task]] = (metrics: PrometheusMetrics) =>
     Router(
       "/"        -> StaticService.service,
-      "/metrics" -> MetricsService.service(metrics),
+      "/metrics" -> PrometheusMetricsService.service(metrics),
       "/measure" -> TestMetricsService.service(metrics)
     ).orNotFound
 
