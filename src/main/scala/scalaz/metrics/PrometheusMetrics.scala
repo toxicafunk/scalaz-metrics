@@ -38,6 +38,7 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
     IO.sync(
       (op: Option[A]) =>
         IO.succeedLazy(f(op) match {
+          case l: Long => g.inc(l.toDouble)
           case d: Double => g.inc(d)
           case _         => ()
         })
@@ -113,9 +114,9 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
 
   class IOTimer(val ctx: SummaryTimer) extends Timer[MetriczIO[?], SummaryTimer] {
     override val a: SummaryTimer                = ctx
-    override def start: MetriczIO[SummaryTimer] = IO.succeed(a)
+    override def start: MetriczIO[SummaryTimer] = IO.succeed({println("start"); a})
     override def stop(io: MetriczIO[SummaryTimer]): MetriczIO[Double] =
-      io.map(c => c.observeDuration())
+      io.map(c => {println("stop"); c.observeDuration()})
   }
 
   override def timer[L: Show](label: Label[L]): IO[IOException, Timer[MetriczIO[?], SummaryTimer]] = {
