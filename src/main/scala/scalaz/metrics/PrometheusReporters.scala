@@ -49,46 +49,51 @@ object PrometheusReporters {
   implicit val jsonPrometheusReporter: Reporter[Summary.Timer, PrometheusMetrics, List, Json] =
     new Reporter[Summary.Timer, PrometheusMetrics, List, Json] {
       override val extractCounters: PrometheusMetrics => Filter => List[Json] =
-        (metrics: PrometheusMetrics) => (filter: Filter) => {
-          val set: util.Set[String] = new util.HashSet[String]()
-          set.add(filter.getOrElse("test_counter"))
-          metricFamily2Json(metrics, set)
-        }
+        (metrics: PrometheusMetrics) =>
+          (filter: Filter) => {
+            val set: util.Set[String] = new util.HashSet[String]()
+            set.add(filter.getOrElse("test_counter"))
+            metricFamily2Json(metrics, set)
+          }
 
       override val extractGauges: PrometheusMetrics => Filter => List[Json] =
-        (metrics: PrometheusMetrics) => (filter: Filter) => {
-          val set: util.Set[String] = new util.HashSet[String]()
-          set.add(filter.getOrElse("test_gauge"))
-          metricFamily2Json(metrics, set)
-        }
+        (metrics: PrometheusMetrics) =>
+          (filter: Filter) => {
+            val set: util.Set[String] = new util.HashSet[String]()
+            set.add(filter.getOrElse("test_gauge"))
+            metricFamily2Json(metrics, set)
+          }
 
       override val extractTimers: PrometheusMetrics => Filter => List[Json] =
-        (metrics: PrometheusMetrics) => (filter: Filter) => {
-          val set: util.Set[String] = new util.HashSet[String]()
-          set.add(filter.getOrElse("test_timer"))
-          set.add(filter.getOrElse("test_timer_count"))
-          set.add(filter.getOrElse("test_timer_sum"))
-          metricFamily2Json(metrics, set)
-        }
+        (metrics: PrometheusMetrics) =>
+          (filter: Filter) => {
+            val set: util.Set[String] = new util.HashSet[String]()
+            set.add(filter.getOrElse("test_timer"))
+            set.add(filter.getOrElse("test_timer_count"))
+            set.add(filter.getOrElse("test_timer_sum"))
+            metricFamily2Json(metrics, set)
+          }
 
       override val extractHistograms: PrometheusMetrics => Filter => List[Json] =
-        (metrics: PrometheusMetrics) => (filter: Filter) => {
-          val set: util.Set[String] = new util.HashSet[String]()
-          set.add(filter.getOrElse("test_histogram"))
-          set.add(filter.getOrElse("test_histogram_count"))
-          set.add(filter.getOrElse("test_histogram_sum"))
-          set.add(filter.getOrElse("test_histogram_bucket"))
-          metricFamily2Json(metrics, set)
-        }
+        (metrics: PrometheusMetrics) =>
+          (filter: Filter) => {
+            val set: util.Set[String] = new util.HashSet[String]()
+            set.add(filter.getOrElse("test_histogram"))
+            set.add(filter.getOrElse("test_histogram_count"))
+            set.add(filter.getOrElse("test_histogram_sum"))
+            set.add(filter.getOrElse("test_histogram_bucket"))
+            metricFamily2Json(metrics, set)
+          }
 
       override val extractMeters: PrometheusMetrics => Filter => List[Json] =
-        (metrics: PrometheusMetrics) => (filter: Filter) => {
-          val set: util.Set[String] = new util.HashSet[String]()
-          set.add(filter.getOrElse("test_meter"))
-          set.add(filter.getOrElse("test_meter_count"))
-          set.add(filter.getOrElse("test_meter_sum"))
-          metricFamily2Json(metrics, set)
-        }
+        (metrics: PrometheusMetrics) =>
+          (filter: Filter) => {
+            val set: util.Set[String] = new util.HashSet[String]()
+            set.add(filter.getOrElse("test_meter"))
+            set.add(filter.getOrElse("test_meter_count"))
+            set.add(filter.getOrElse("test_meter_sum"))
+            metricFamily2Json(metrics, set)
+          }
     }
 
 }
