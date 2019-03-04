@@ -1,25 +1,22 @@
 package scalaz.metrics.http
 
-import java.io.IOException
-
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
 import org.http4s.{ HttpRoutes, Response }
 import scalaz.Scalaz._
 import scalaz.metrics.{ Label, Metrics }
-import scalaz.zio.{ IO, RTS }
-import scalaz.zio.interop.Task
 import scalaz.zio.interop.catz._
+import scalaz.zio.{ DefaultRuntime, IO, Task }
 
 import scala.math.Numeric.IntIsIntegral
 
-object TestMetricsService extends RTS {
+object TestMetricsService extends DefaultRuntime {
   println("Serving")
 
   val s: Stream[Int]               = Stream.from(1)
   val tester: Option[Unit] => Long = (op: Option[Unit]) => s.takeWhile(_ < 10).head.toLong
 
-  def performTests[Ctx](metrics: Metrics[IO[IOException, ?], Ctx]): IO[IOException, String] =
+  def performTests[Ctx](metrics: Metrics[Task[?], Ctx]): Task[String] =
     for {
       f  <- metrics.counter(Label(Array("test", "counter"), "_"))
       _  <- f(1)
@@ -41,14 +38,14 @@ object TestMetricsService extends RTS {
     } yield { s"time $l ns" }
 
   def service[Ctx] =
-    (metrics: Metrics[IO[IOException, ?], Ctx]) =>
+    (metrics: Metrics[Task[?], Ctx]) =>
       HttpRoutes.of[Task] {
         case GET -> Root =>
-          val m = performTests(metrics).attempt
+          val m = performTests(metrics).either
             .map(ei => {
               ei.fold(_ => "failure encountered", s => s)
             })
 
           Task(Response[Task](Ok).withEntity(unsafeRun(m)))
-      }
+    }
 }

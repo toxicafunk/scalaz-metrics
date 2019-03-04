@@ -6,17 +6,15 @@ import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.{ Request, Response }
 import scalaz.metrics.PrometheusMetrics
-import scalaz.zio.interop.Task
-import scalaz.zio.interop.catz._
-import scalaz.zio.{ App, Clock, IO }
+import scalaz.metrics.http.Server.timer
+import scalaz.zio.interop.catz.taskEffectInstances
+import scalaz.zio.{ App, Task }
 
 import scala.util.Properties.envOrNone
 
 object PrometheusServerTest extends App {
   val port: Int = envOrNone("HTTP_PORT").fold(9090)(_.toInt)
   println(s"Starting server on port $port")
-
-  implicit val clock: Clock = Clock.Live
 
   val metrics = new PrometheusMetrics
 
@@ -28,7 +26,7 @@ object PrometheusServerTest extends App {
         "/measure" -> TestMetricsService.service(metrics)
       ).orNotFound
 
-  override def run(args: List[String]): IO[Nothing, ExitStatus] =
+  override def run(args: List[String]) =
     BlazeServerBuilder[Task]
       .bindHttp(port)
       .withHttpApp(httpApp(metrics))
@@ -36,5 +34,5 @@ object PrometheusServerTest extends App {
       .compile
       .drain
       .run
-      .map(_ => ExitStatus.ExitNow(0))
+      .map(_ => 0)
 }

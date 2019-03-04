@@ -1,13 +1,12 @@
 package scalaz.metrics
 
-import java.io.IOException
 import scalaz._
-import scalaz.zio.IO
+import scalaz.zio.Task
 
-trait Reporter[Ctx, M <: Metrics[IO[IOException, ?], Ctx], F[_], A] {
+trait Reporter[Ctx, M <: Metrics[Task[?], Ctx], F[_], A] {
 
   type Filter    = Option[String]
-  type MetriczIO = Metrics[IO[IOException, ?], Ctx]
+  type MetriczIO = Metrics[Task[?], Ctx]
 
   def extractCounters: M => Filter => F[A]
   def extractGauges: M => Filter => F[A]
@@ -17,7 +16,7 @@ trait Reporter[Ctx, M <: Metrics[IO[IOException, ?], Ctx], F[_], A] {
 
 }
 
-trait ReportPrinter[Ctx, M <: Metrics[IO[IOException, ?], Ctx]] {
+trait ReportPrinter[Ctx, M <: Metrics[Task[?], Ctx]] {
   def report[F[_], A](metrics: M, filter: Option[String])(
     cons: (String, A) => A
   )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[Ctx, M, F, A]): A

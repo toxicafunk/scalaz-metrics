@@ -2,22 +2,21 @@ package scalaz.metrics.http
 
 import cats.data.Kleisli
 import com.codahale.metrics.jmx.JmxReporter
+import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze._
-import org.http4s.{ Request, Response }
+import org.http4s.{Request, Response}
 import scalaz.metrics.DropwizardMetrics
-import scalaz.zio.{ App, Clock, IO }
-import scalaz.zio.interop.Task
+import scalaz.metrics.http.Server.timer
 import scalaz.zio.interop.catz._
-import org.http4s.implicits._
+import scalaz.zio.{App, Task}
+import scalaz.zio.interop.catz.taskEffectInstances
 
 import scala.util.Properties.envOrNone
 
 object DropwizardServerTest extends App {
   val port: Int = envOrNone("HTTP_PORT").fold(9090)(_.toInt)
   println(s"Starting server on port $port")
-
-  implicit val clock: Clock = Clock.Live
 
   val metrics = new DropwizardMetrics
 
@@ -32,7 +31,7 @@ object DropwizardServerTest extends App {
         "/measure" -> TestMetricsService.service(metrics)
       ).orNotFound
 
-  override def run(args: List[String]): IO[Nothing, ExitStatus] =
+  override def run(args: List[String]) =
     BlazeServerBuilder[Task]
       .bindHttp(port)
       .withHttpApp(httpApp(metrics))
@@ -40,5 +39,5 @@ object DropwizardServerTest extends App {
       .compile
       .drain
       .run
-      .map(_ => ExitStatus.ExitNow(0))
+      .map(_ => 0)
 }

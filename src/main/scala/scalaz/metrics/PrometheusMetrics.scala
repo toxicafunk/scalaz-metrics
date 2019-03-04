@@ -4,38 +4,36 @@ import java.io.IOException
 
 import io.prometheus.client._
 import scalaz.metrics.Label._
-import scalaz.metrics.Reservoir.{ Bounded, Config, ExponentiallyDecaying, Uniform }
-import scalaz.zio.IO
-import scalaz.{ Semigroup, Show }
+import scalaz.metrics.Reservoir.{Bounded, Config, ExponentiallyDecaying, Uniform}
+import scalaz.zio.{IO, Task, UIO}
+import scalaz.{Semigroup, Show}
 
-class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
+class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
 
   val registry: CollectorRegistry = CollectorRegistry.defaultRegistry
 
-  type MetriczIO[A] = IO[IOException, A]
-
-  override def counter[L: Show](label: Label[L]): MetriczIO[Long => IO[IOException, Unit]] = {
+  override def counter[L: Show](label: Label[L]): Task[Long => UIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val c = Counter
       .build()
       .name(lbl)
       .help(s"$lbl counter")
       .register()
-    IO.sync { l: Long =>
+    IO.effect { l: Long =>
       IO.succeedLazy(c.inc(l.toDouble))
     }
   }
 
   override def gauge[A, B: Semigroup, L: Show](label: Label[L])(
     f: Option[A] => B
-  ): MetriczIO[Option[A] => IO[IOException, Unit]] = {
+  ): Task[Option[A] => IO[IOException, Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val g = Gauge
       .build()
       .name(lbl)
       .help(s"$lbl gauge")
       .register()
-    IO.sync(
+    IO.effect(
       (op: Option[A]) =>
         IO.succeedLazy(f(op) match {
           case l: Long   => g.inc(l.toDouble)
@@ -47,14 +45,14 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
 
   override def histogram[A: scala.Numeric, L: Show](label: Label[L], res: Reservoir[A])(
     implicit num: scala.Numeric[A]
-  ): MetriczIO[A => MetriczIO[Unit]] = {
+  ): Task[A => Task[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val h = Histogram
       .build()
       .name(lbl)
       .help(s"$lbl histogram")
       .register()
-    IO.sync((a: A) => IO.sync(h.observe(num.toDouble(a))))
+    IO.effect((a: A) => IO.effect(h.observe(num.toDouble(a))))
   }
 
   def processConfig(config: Option[Config], values: Tuple3[String, String, String]): Tuple3[Double, Double, Int] =
@@ -81,7 +79,7 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
   def histogramTimer[A: scala.Numeric, L: Show](
     label: Label[L],
     res: Reservoir[A] = Reservoir.ExponentiallyDecaying(None)
-  ): MetriczIO[() => MetriczIO[Unit]] = {
+  ): Task[() => Task[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val hb = Histogram
       .build()
@@ -100,10 +98,10 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
 
     val h = builder.register()
 
-    IO.sync({
+    IO.effect({
       val timer = h.startTimer()
       () =>
-        IO.sync({
+        IO.effect({
           timer.observeDuration()
           ()
         })
@@ -112,14 +110,14 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
 
   type SummaryTimer = Summary.Timer
 
-  class IOTimer(val ctx: SummaryTimer) extends Timer[MetriczIO[?], SummaryTimer] {
+  class IOTimer(val ctx: SummaryTimer) extends Timer[Task[?], SummaryTimer] {
     override val a: SummaryTimer                = ctx
-    override def start: MetriczIO[SummaryTimer] = IO.succeed({ println("start"); a })
-    override def stop(io: MetriczIO[SummaryTimer]): MetriczIO[Double] =
+    override def start: Task[SummaryTimer] = IO.succeed({ println("start"); a })
+    override def stop(io: Task[SummaryTimer]): Task[Double] =
       io.map(c => { println("stop"); c.observeDuration() })
   }
 
-  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[MetriczIO[?], SummaryTimer]] = {
+  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[Task[?], SummaryTimer]] = {
     val lbl = Show[Label[L]].shows(label)
     val iot = IO.succeed(
       Summary
@@ -132,7 +130,7 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
     r
   }
 
-  override def meter[L: Show](label: Label[L]): IO[IOException, Double => IO[IOException, Unit]] = {
+  override def meter[L: Show](label: Label[L]): Task[Double => Task[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val iot = IO.succeed(
       Summary
@@ -141,7 +139,7 @@ class PrometheusMetrics extends Metrics[IO[IOException, ?], Summary.Timer] {
         .help(s"$lbl timer")
         .register()
     )
-    IO.sync(d => iot.map(s => s.observe(d)))
+    IO.effect( (d: Double) => iot.map(s => s.observe(d)))
   }
 
 }

@@ -1,8 +1,7 @@
 package scalaz.metrics
-import java.io.IOException
 
 import scalaz.Scalaz._
-import scalaz.zio.{ App, IO }
+import scalaz.zio.{ App, IO, Task }
 
 import scala.math.Numeric.IntIsIntegral
 
@@ -12,7 +11,7 @@ object DropwizardMetricsSpec extends App {
 
   val tester: Option[Unit] => Long = (op: Option[Unit]) => System.nanoTime()
 
-  def performTests: IO[IOException, Unit] =
+  def performTests: Task[Unit] =
     for {
       f  <- dropwizardMetrics.counter(Label(Array("test", "counter")))
       _  <- f(1)
@@ -34,13 +33,12 @@ object DropwizardMetricsSpec extends App {
       _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
     } yield { println(s"time $l ns"); () }
 
-  def run(args: List[String]): IO[Nothing, ExitStatus] =
-    performTests.attempt
+  def run(args: List[String]) =
+    performTests.either
       .map(ei => {
         printMetrics()
         ei.fold(_ => 1, _ => 0)
       })
-      .map(ExitStatus.ExitNow(_))
 
   def printMetrics(): Unit = {
     println(

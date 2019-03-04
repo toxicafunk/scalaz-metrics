@@ -1,28 +1,26 @@
 package scalaz.metrics
 
-import java.io.IOException
-
 import scalaz.Scalaz._
-import scalaz.zio.{ IO, RTS }
+import scalaz.zio.{ DefaultRuntime, IO, Task }
 import testz.{ assert, Harness, PureHarness }
 
-object DropwizardTests extends RTS {
+object DropwizardTests extends DefaultRuntime {
 
   val dropwizardMetrics = new DropwizardMetrics
 
-  val testCounter: IO[IOException, Unit] = for {
+  val testCounter: Task[Unit] = for {
     f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
     a <- f(1)
     b <- f(2)
   } yield b
 
-  val testGauge: (Option[Unit] => Long) => IO[IOException, Unit] = (f: Option[Unit] => Long) =>
+  val testGauge: (Option[Unit] => Long) => Task[Unit] = (f: Option[Unit] => Long) =>
     for {
       a <- dropwizardMetrics.gauge[Unit, Long, String](Label(Array("test", "gauge")))(f)
       r <- a(None)
     } yield r
 
-  val testTimer: IO[IOException, List[Double]] = for {
+  val testTimer: Task[List[Double]] = for {
     t  <- dropwizardMetrics.timer(Label(Array("test", "timer")))
     t1 = t.start
     l <- IO.foreach(
@@ -34,7 +32,7 @@ object DropwizardTests extends RTS {
         )(a => t.stop(t1))
   } yield l
 
-  val testHistogram: IO[IOException, Unit] = {
+  val testHistogram: Task[Unit] = {
     import scala.math.Numeric.IntIsIntegral
     for {
       h <- dropwizardMetrics.histogram(Label(Array("test", "histogram")))
@@ -42,7 +40,7 @@ object DropwizardTests extends RTS {
     } yield ()
   }
 
-  val testMeter: IO[IOException, Unit] = for {
+  val testMeter: Task[Unit] = for {
     m <- dropwizardMetrics.meter(Label(Array("test", "meter")))
     _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
   } yield ()

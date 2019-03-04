@@ -5,11 +5,11 @@ import java.util.concurrent.Executors
 
 import org.http4s._
 import org.http4s.dsl.io._
-import scalaz.zio.Clock
-import scalaz.zio.interop.Task
+import scalaz.zio.Task
+import scalaz.zio.clock.Clock
 import scalaz.zio.interop.catz._
 
-import scala.concurrent.{ ExecutionContext, ExecutionContextExecutorService }
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 object StaticService {
 
