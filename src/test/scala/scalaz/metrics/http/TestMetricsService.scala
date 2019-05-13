@@ -14,17 +14,20 @@ object TestMetricsService extends DefaultRuntime {
   println("Serving")
 
   val s: Stream[Int]               = Stream.from(1)
-  val tester: Option[Unit] => Long = (op: Option[Unit]) => s.takeWhile(_ < 10).head.toLong
+  val tester: Option[Int] => Stream[Int] = (op: Option[Int]) => s.takeWhile(_ < 10)
 
+  //def performTests[Ctx](metrics: Metrics[Task[?], Ctx]): Task[String] =
   def performTests[Ctx](metrics: Metrics[Task[?], Ctx]): Task[String] =
     for {
       f  <- metrics.counter(Label(Array("test", "counter"), "_"))
       _  <- f(1)
       _  <- f(2)
-      _  <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
+      g  <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
+      _ <- g(2.some)
+      //_ <- g(8.some)
       t  <- metrics.timer(Label(Array("test", "timer"), "_"))
       t1 = t.start
-      l <- IO.foreach(
+      l <- IO.foreachPar(
             List(
               Thread.sleep(1000L),
               Thread.sleep(1400L),
@@ -34,7 +37,7 @@ object TestMetricsService extends DefaultRuntime {
       h <- metrics.histogram(Label(Array("test", "histogram"), "_"))
       _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
       m <- metrics.meter(Label(Array("test", "meter"), "_"))
-      _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
+      _ <- IO.foreach(1 to 5)(i => IO.succeed(m(i.toDouble)))
     } yield { s"time $l ns" }
 
   def service[Ctx] =

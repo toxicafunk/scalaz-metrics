@@ -77,7 +77,7 @@ object PrometheusTests extends DefaultRuntime {
         assert(counter == 3.0)
       },
       test("gauge returns latest value") { () =>
-        val tester: Option[Double] => Double = (op: Option[Double]) => op.get
+        val tester: Option[Double] => Double = (op: Option[Double]) => op.getOrElse(0.0)
         unsafeRun(testGauge(tester))
         val set: util.Set[String] = new util.HashSet[String]()
         set.add("testgauge")

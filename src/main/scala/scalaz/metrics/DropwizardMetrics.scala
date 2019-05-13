@@ -1,13 +1,11 @@
 package scalaz.metrics
 
-import java.io.IOException
-
 import com.codahale.metrics.MetricRegistry.MetricSupplier
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{Reservoir => DWReservoir, _}
 import scalaz.metrics.Label._
 import scalaz.metrics.Reservoir._
-import scalaz.zio.{IO, Task, UIO}
+import scalaz.zio.{IO, Task, UIO, ZIO}
 import scalaz.{Semigroup, Show}
 
 class DropwizardMetrics extends Metrics[Task[?], Context] {
@@ -25,9 +23,7 @@ class DropwizardMetrics extends Metrics[Task[?], Context] {
 
   override def gauge[A, B: Semigroup, L: Show](
     label: Label[L]
-  )(
-    f: Option[A] => B
-  ): Task[Option[A] => IO[IOException, Unit]] = {
+  )(f: Option[A] => B): Task[Option[A] => UIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     IO.effect(
       (op: Option[A]) =>
@@ -47,7 +43,7 @@ class DropwizardMetrics extends Metrics[Task[?], Context] {
       io.map(c => c.stop().toDouble)
   }
 
-  override def timer[L: Show](label: Label[L]): IO[IOException, Timer[Task[?], Context]] = {
+  override def timer[L: Show](label: Label[L]): ZIO[Any, Nothing, IOTimer] = {
     val lbl = Show[Label[L]].shows(label)
     val iot = IO.succeed(registry.timer(lbl))
     val r   = iot.map(t => new IOTimer(t.time()))

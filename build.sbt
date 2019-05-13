@@ -5,6 +5,7 @@ organization in ThisBuild := "org.scalaz"
 version in ThisBuild := "0.1.0-SNAPSHOT"
 
 val http4sVersion = "0.20.0-M5"
+val zioVersion = "1.0-RC4"
 
 publishTo in ThisBuild := {
   val nexus = "https://oss.sonatype.org/"
@@ -34,9 +35,9 @@ lazy val root =
 
 libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core"                 % "7.2.27",
-  "org.scalaz" %% "scalaz-zio"                  % "1.0-RC1",
-  "org.scalaz" %% "scalaz-zio-interop-cats"     % "1.0-RC1",
-  "org.scalaz" %% "scalaz-zio-interop-scalaz7x" % "1.0-RC1",
+  "org.scalaz" %% "scalaz-zio"                  % zioVersion,
+  "org.scalaz" %% "scalaz-zio-interop-cats"     % zioVersion,
+  "org.scalaz" %% "scalaz-zio-interop-scalaz7x" % zioVersion,
   "org.scalaz" %% "testz-core"                  % "0.0.5",
   "org.scalaz" %% "testz-stdlib"                % "0.0.5"
 )

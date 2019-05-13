@@ -26,7 +26,7 @@ class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
 
   override def gauge[A, B: Semigroup, L: Show](label: Label[L])(
     f: Option[A] => B
-  ): Task[Option[A] => IO[IOException, Unit]] = {
+  ): Task[Option[A] => UIO[Unit]] = {
     val lbl = Show[Label[L]].shows(label)
     val g = Gauge
       .build()
@@ -112,9 +112,9 @@ class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
 
   class IOTimer(val ctx: SummaryTimer) extends Timer[Task[?], SummaryTimer] {
     override val a: SummaryTimer                = ctx
-    override def start: Task[SummaryTimer] = IO.succeed({ println("start"); a })
+    override def start: Task[SummaryTimer] = IO.succeed(a)
     override def stop(io: Task[SummaryTimer]): Task[Double] =
-      io.map(c => { println("stop"); c.observeDuration() })
+      io.map(c => c.observeDuration())
   }
 
   override def timer[L: Show](label: Label[L]): IO[IOException, Timer[Task[?], SummaryTimer]] = {
