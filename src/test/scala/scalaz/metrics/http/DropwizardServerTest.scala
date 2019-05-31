@@ -7,9 +7,9 @@ import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.{Request, Response}
 import scalaz.metrics.DropwizardMetrics
-import scalaz.metrics.http.Server.timer
+import scalaz.metrics.http.Server._
 import scalaz.zio.interop.catz._
-import scalaz.zio.{App, Task}
+import scalaz.zio.{App, TaskR}
 import scalaz.zio.interop.catz.taskEffectInstances
 
 import scala.util.Properties.envOrNone
@@ -23,7 +23,7 @@ object DropwizardServerTest extends App {
   val reporter: JmxReporter = JmxReporter.forRegistry(metrics.registry).build
   reporter.start()
 
-  def httpApp[A]: DropwizardMetrics => Kleisli[Task, Request[Task], Response[Task]] =
+  def httpApp[A]: HttpApp =
     (metrics: DropwizardMetrics) =>
       Router(
         "/"        -> StaticService.service,
@@ -31,13 +31,15 @@ object DropwizardServerTest extends App {
         "/measure" -> TestMetricsService.service(metrics)
       ).orNotFound
 
-  override def run(args: List[String]) =
-    BlazeServerBuilder[Task]
+  override def run(args: List[String]) = builder(httpApp, metrics).run.map(_ => 0)
+
+
+  /*BlazeServerBuilder[HttpTask]
       .bindHttp(port)
       .withHttpApp(httpApp(metrics))
       .serve
       .compile
       .drain
       .run
-      .map(_ => 0)
+      .map(_ => 0)*/
 }

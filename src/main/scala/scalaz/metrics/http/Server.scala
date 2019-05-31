@@ -1,53 +1,47 @@
 package scalaz.metrics.http
 
 import cats.data.Kleisli
-import cats.effect
-import cats.effect.Timer
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.{ Request, Response }
-import scalaz.metrics.{ DropwizardMetrics, _ }
+import scalaz.metrics.DropwizardMetrics
 import scalaz.zio.{ TaskR, ZIO }
 import scalaz.zio.clock.Clock
-import scalaz.zio.duration.Duration
 import scalaz.zio.interop.catz._
-
-import scala.concurrent.duration.{ FiniteDuration, NANOSECONDS, TimeUnit }
+import scalaz.zio.scheduler.Scheduler
 import scala.util.Properties.envOrNone
-import scalaz.zio.DefaultRuntime
 
 object Server {
   val port: Int = envOrNone("HTTP_PORT").fold(9090)(_.toInt)
 
-  type HttpTask[A] = TaskR[DefaultRuntime, A]
+  type HttpEnvironment = Clock with Scheduler
+  type HttpTask[A]     = TaskR[HttpEnvironment, A]
 
-  implicit val timer: Timer[HttpTask] = new Timer[HttpTask] {
-    val zioClock = Clock.Live.clock
+  type HttpApp = DropwizardMetrics => Kleisli[HttpTask, Request[HttpTask], Response[HttpTask]]
 
-    override def clock: effect.Clock[HttpTask] = new effect.Clock[HttpTask] {
-      override def realTime(unit: TimeUnit) = zioClock.nanoTime.map(unit.convert(_, NANOSECONDS))
-
-      override def monotonic(unit: TimeUnit) = zioClock.currentTime(unit)
-    }
-
-    override def sleep(duration: FiniteDuration): HttpTask[Unit] = zioClock.sleep(Duration.fromScala(duration))
-  }
-
-  val httpApp: DropwizardMetrics => Kleisli[HttpTask, Request[HttpTask], Response[HttpTask]] =
+  val httpApp: HttpApp =
     (metrics: DropwizardMetrics) =>
       Router(
         "/"        -> StaticService.service,
         "/metrics" -> DropwizardMetricsService.service(metrics)
       ).orNotFound
 
-  val builder: DropwizardMetrics => HttpTask[Unit] = (metrics: DropwizardMetrics) =>
-    ZIO.runtime[DefaultRuntime].flatMap { implicit rts =>
-      BlazeServerBuilder[HttpTask]
-        .bindHttp(port)
-        .withHttpApp(httpApp(metrics))
-        .serve
-        .compile
-        .drain
-    }
+  val builder: (HttpApp, DropwizardMetrics) => HttpTask[Unit] = (app: HttpApp, metrics: DropwizardMetrics) =>
+    ZIO
+      .runtime[HttpEnvironment]
+      .flatMap { implicit rts =>
+        BlazeServerBuilder[HttpTask]
+          .bindHttp(port)
+          .withHttpApp(app(metrics))
+          .serve
+          .compile
+          .drain
+      }
+      .provideSome[HttpEnvironment] { base =>
+        new Clock with Scheduler {
+          override val scheduler: Scheduler.Service[Any] = base.scheduler
+          override val clock: Clock.Service[Any]         = base.clock
+        }
+      }
 }

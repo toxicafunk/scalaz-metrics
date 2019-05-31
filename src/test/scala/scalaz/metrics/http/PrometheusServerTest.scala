@@ -6,9 +6,9 @@ import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.{ Request, Response }
 import scalaz.metrics.PrometheusMetrics
-import scalaz.metrics.http.Server.timer
 import scalaz.zio.interop.catz.taskEffectInstances
 import scalaz.zio.{ App, Task }
+import scalaz.metrics.http.Server._
 
 import scala.util.Properties.envOrNone
 
@@ -26,13 +26,5 @@ object PrometheusServerTest extends App {
         "/measure" -> TestMetricsService.service(metrics)
       ).orNotFound
 
-  override def run(args: List[String]) =
-    BlazeServerBuilder[Task]
-      .bindHttp(port)
-      .withHttpApp(httpApp(metrics))
-      .serve
-      .compile
-      .drain
-      .run
-      .map(_ => 0)
+  override def run(args: List[String]) = builder(httpApp, metrics)
 }

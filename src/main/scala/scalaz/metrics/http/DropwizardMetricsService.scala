@@ -9,11 +9,12 @@ import org.http4s.{HttpRoutes, Response}
 import scalaz.metrics.DropwizardMetrics
 import scalaz.metrics.DropwizardReporters.{dropwizardReportPrinter, jsonDWReporter}
 import scalaz.std.list.listInstance
-import scalaz.zio.{DefaultRuntime, TaskR}
+import scalaz.zio.TaskR
 import scalaz.zio.interop.catz._
+import scalaz.metrics.http.Server._
 
 object DropwizardMetricsService {
-  type HttpTask[A] = TaskR[DefaultRuntime, A]
+
   def service[A]: DropwizardMetrics => HttpRoutes[HttpTask] =
     (metrics: DropwizardMetrics) =>
       HttpRoutes.of[HttpTask] {
@@ -23,4 +24,5 @@ object DropwizardMetricsService {
           TaskR(Response[HttpTask](Ok).withEntity(m))
         }
       }
+
 }
