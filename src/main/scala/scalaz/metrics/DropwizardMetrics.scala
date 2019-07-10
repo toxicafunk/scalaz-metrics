@@ -2,11 +2,11 @@ package scalaz.metrics
 
 import com.codahale.metrics.MetricRegistry.MetricSupplier
 import com.codahale.metrics.Timer.Context
-import com.codahale.metrics.{Reservoir => DWReservoir, _}
+import com.codahale.metrics.{ Reservoir => DWReservoir, _ }
 import scalaz.metrics.Label._
 import scalaz.metrics.Reservoir._
-import scalaz.zio.{Task, UIO, ZIO}
-import scalaz.{Semigroup, Show}
+import scalaz.zio.{ Task, UIO, ZIO }
+import scalaz.{ Semigroup, Show }
 
 class DropwizardMetrics extends Metrics[Task[?], Context] {
 
@@ -37,7 +37,7 @@ class DropwizardMetrics extends Metrics[Task[?], Context] {
   }
 
   class IOTimer(val ctx: Context) extends Timer[Task[?], Context] {
-    override val a: Context                = ctx
+    override val a: Context           = ctx
     override def start: Task[Context] = ZIO.succeed(a)
     override def stop(io: Task[Context]): Task[Double] =
       io.map(c => c.stop().toDouble)

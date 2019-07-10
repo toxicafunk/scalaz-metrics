@@ -4,9 +4,9 @@ import java.io.IOException
 
 import io.prometheus.client._
 import scalaz.metrics.Label._
-import scalaz.metrics.Reservoir.{Bounded, Config, ExponentiallyDecaying, Uniform}
-import scalaz.zio.{IO, Task, UIO}
-import scalaz.{Semigroup, Show}
+import scalaz.metrics.Reservoir.{ Bounded, Config, ExponentiallyDecaying, Uniform }
+import scalaz.zio.{ IO, Task, UIO }
+import scalaz.{ Semigroup, Show }
 
 class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
 
@@ -111,7 +111,7 @@ class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
   type SummaryTimer = Summary.Timer
 
   class IOTimer(val ctx: SummaryTimer) extends Timer[Task[?], SummaryTimer] {
-    override val a: SummaryTimer                = ctx
+    override val a: SummaryTimer           = ctx
     override def start: Task[SummaryTimer] = IO.succeed(a)
     override def stop(io: Task[SummaryTimer]): Task[Double] =
       io.map(c => c.observeDuration())
@@ -139,7 +139,7 @@ class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
         .help(s"$lbl timer")
         .register()
     )
-    IO.effect( (d: Double) => iot.map(s => s.observe(d)))
+    IO.effect((d: Double) => iot.map(s => s.observe(d)))
   }
 
 }

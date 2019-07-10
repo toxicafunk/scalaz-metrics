@@ -5,7 +5,7 @@ organization in ThisBuild := "org.scalaz"
 version in ThisBuild := "0.1.0-SNAPSHOT"
 
 val http4sVersion = "0.20.0-M5"
-val zioVersion = "1.0-RC4"
+val zioVersion    = "1.0-RC4"
 
 publishTo in ThisBuild := {
   val nexus = "https://oss.sonatype.org/"

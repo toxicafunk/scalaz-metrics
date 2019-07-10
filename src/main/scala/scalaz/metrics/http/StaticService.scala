@@ -9,7 +9,7 @@ import scalaz.zio.clock.Clock
 import scalaz.zio.interop.catz._
 import scalaz.metrics.http.Server._
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
+import scala.concurrent.{ ExecutionContext, ExecutionContextExecutorService }
 
 object StaticService {
   val blockingEc: ExecutionContextExecutorService =

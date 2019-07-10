@@ -8,7 +8,7 @@ import org.http4s.{ HttpRoutes, Response }
 import scalaz.Scalaz._
 import scalaz.metrics.{ Label, Metrics }
 import scalaz.zio.interop.catz._
-import scalaz.zio.{ZIO, TaskR, Task }
+import scalaz.zio.{ Task, TaskR, ZIO }
 import Server._
 
 import scala.math.Numeric.IntIsIntegral
@@ -16,16 +16,16 @@ import scala.math.Numeric.IntIsIntegral
 object TestMetricsService {
   println("Serving")
 
-  val s: Stream[Int]               = Stream.from(1)
+  val s: Stream[Int]                     = Stream.from(1)
   val tester: Option[Int] => Stream[Int] = (_: Option[Int]) => s.takeWhile(_ < 10)
 
   //def performTests[Ctx](metrics: Metrics[Task[?], Ctx]): Task[String] =
   def performTests[Ctx](metrics: Metrics[Task[?], Ctx]): HttpTask[String] =
     for {
-      f  <- metrics.counter(Label(Array("test", "counter"), "_"))
-      _  <- f(1)
-      _  <- f(2)
-      g  <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
+      f <- metrics.counter(Label(Array("test", "counter"), "_"))
+      _ <- f(1)
+      _ <- f(2)
+      g <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
       _ <- g(2.some)
       //_ <- g(8.some)
       t  <- metrics.timer(Label(Array("test", "timer"), "_"))
@@ -47,8 +47,11 @@ object TestMetricsService {
     (metrics: Metrics[Task[?], Ctx]) =>
       HttpRoutes.of[HttpTask] {
         case GET -> Root =>
-          val m = performTests(metrics).fold(t => jSingleObject("error", jString(s"failure encountered $t")), s => jSingleObject("time", jString(s)))
+          val m = performTests(metrics).fold(
+            t => jSingleObject("error", jString(s"failure encountered $t")),
+            s => jSingleObject("time", jString(s))
+          )
           //TaskR(Response[HttpTask](Ok).withEntity(m))
           m.flatMap(j => TaskR(Response[HttpTask](Ok).withEntity(j)))
-    }
+      }
 }

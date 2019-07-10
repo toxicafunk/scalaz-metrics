@@ -36,7 +36,7 @@ object MetricsService {
 
   import io.prometheus.client.Summary.Timer
   import scalaz.metrics.PrometheusMetrics
-  import scalaz.metrics.PrometheusReporters.{ prometheusReportPrinter, jsonPrometheusReporter }
+  import scalaz.metrics.PrometheusReporters.{ jsonPrometheusReporter, prometheusReportPrinter }
   implicit val prometheusMetricsService = new MetricsService[PrometheusMetrics, Timer] {
 
     def service: PrometheusMetrics => HttpRoutes[HttpTask] =

@@ -27,21 +27,22 @@ object Server {
         "/metrics" -> dropwizardMetricsService.service(metrics)
       ).orNotFound*/
 
-  def builder[Ctx]: KleisliApp => HttpTask[Unit] = (app: Kleisli[HttpTask, Request[HttpTask], Response[HttpTask]]) =>
-    ZIO
-      .runtime[HttpEnvironment]
-      .flatMap { implicit rts =>
-        BlazeServerBuilder[HttpTask]
-          .bindHttp(port)
-          .withHttpApp(app)
-          .serve
-          .compile
-          .drain
-      }
-      .provideSome[HttpEnvironment] { base =>
-        new Clock with Scheduler {
-          override val scheduler: Scheduler.Service[Any] = base.scheduler
-          override val clock: Clock.Service[Any]         = base.clock
+  def builder[Ctx]: KleisliApp => HttpTask[Unit] =
+    (app: Kleisli[HttpTask, Request[HttpTask], Response[HttpTask]]) =>
+      ZIO
+        .runtime[HttpEnvironment]
+        .flatMap { implicit rts =>
+          BlazeServerBuilder[HttpTask]
+            .bindHttp(port)
+            .withHttpApp(app)
+            .serve
+            .compile
+            .drain
         }
-      }
+        .provideSome[HttpEnvironment] { base =>
+          new Clock with Scheduler {
+            override val scheduler: Scheduler.Service[Any] = base.scheduler
+            override val clock: Clock.Service[Any]         = base.clock
+          }
+        }
 }
