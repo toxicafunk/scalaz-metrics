@@ -1,15 +1,13 @@
 package scalaz.metrics.http
 
-import cats.data.Kleisli
 import com.codahale.metrics.jmx.JmxReporter
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.server.blaze._
-import org.http4s.{Request, Response}
 import scalaz.metrics.DropwizardMetrics
+import scalaz.metrics.http.MetricsService.dropwizardMetricsService
 import scalaz.metrics.http.Server._
 import scalaz.zio.interop.catz._
-import scalaz.zio.{App, TaskR}
+import scalaz.zio.App
 import scalaz.zio.interop.catz.taskEffectInstances
 
 import scala.util.Properties.envOrNone
@@ -23,23 +21,13 @@ object DropwizardServerTest extends App {
   val reporter: JmxReporter = JmxReporter.forRegistry(metrics.registry).build
   reporter.start()
 
-  def httpApp[A]: HttpApp =
+  val httpApp =
     (metrics: DropwizardMetrics) =>
       Router(
         "/"        -> StaticService.service,
-        "/metrics" -> DropwizardMetricsService.service(metrics),
+        "/metrics" -> dropwizardMetricsService.service(metrics),
         "/measure" -> TestMetricsService.service(metrics)
       ).orNotFound
 
-  override def run(args: List[String]) = builder(httpApp, metrics).run.map(_ => 0)
-
-
-  /*BlazeServerBuilder[HttpTask]
-      .bindHttp(port)
-      .withHttpApp(httpApp(metrics))
-      .serve
-      .compile
-      .drain
-      .run
-      .map(_ => 0)*/
+  override def run(args: List[String]) = builder(httpApp(metrics)).run.map(_ => 0)
 }

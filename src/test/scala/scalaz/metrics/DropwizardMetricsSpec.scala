@@ -9,7 +9,7 @@ object DropwizardMetricsSpec extends App {
 
   val dropwizardMetrics = new DropwizardMetrics
 
-  val tester: Option[Unit] => Long = (op: Option[Unit]) => System.nanoTime()
+  val tester: Option[Unit] => Long = (_: Option[Unit]) => System.nanoTime()
 
   def performTests: Task[Unit] =
     for {
@@ -26,11 +26,11 @@ object DropwizardMetricsSpec extends App {
               Thread.sleep(1400L),
               Thread.sleep(1200L)
             )
-          )(a => t.stop(t1))
+          )(_ => t.stop(t1))
       h <- dropwizardMetrics.histogram(Label(Array("test", "histogram")))
-      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
+      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.unit)
       m <- dropwizardMetrics.meter(Label(Array("test", "meter")))
-      _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
+      _ <- IO.foreach(1 to 5)(_ => IO.succeed(m(1)))
     } yield { println(s"time $l ns"); () }
 
   def run(args: List[String]) =

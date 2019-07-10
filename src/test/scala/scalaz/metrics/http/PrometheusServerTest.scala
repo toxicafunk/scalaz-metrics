@@ -1,14 +1,13 @@
 package scalaz.metrics.http
 
-import cats.data.Kleisli
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.server.blaze._
-import org.http4s.{ Request, Response }
 import scalaz.metrics.PrometheusMetrics
-import scalaz.zio.interop.catz.taskEffectInstances
-import scalaz.zio.{ App, Task }
 import scalaz.metrics.http.Server._
+import scalaz.metrics.http.MetricsService.prometheusMetricsService
+import scalaz.zio.interop.catz._
+import scalaz.zio.App
+import scalaz.zio.interop.catz.taskEffectInstances
 
 import scala.util.Properties.envOrNone
 
@@ -18,13 +17,13 @@ object PrometheusServerTest extends App {
 
   val metrics = new PrometheusMetrics
 
-  def httpApp[A]: PrometheusMetrics => Kleisli[Task, Request[Task], Response[Task]] =
+  def httpApp =
     (metrics: PrometheusMetrics) =>
       Router(
         "/"        -> StaticService.service,
-        "/metrics" -> PrometheusMetricsService.service(metrics),
+        "/metrics" -> prometheusMetricsService.service(metrics),
         "/measure" -> TestMetricsService.service(metrics)
       ).orNotFound
 
-  override def run(args: List[String]) = builder(httpApp, metrics)
+  override def run(args: List[String]) = builder(httpApp(metrics)).run.map(_ => 0)
 }

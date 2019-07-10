@@ -1,12 +1,10 @@
 package scalaz.metrics.http
 
 import cats.data.Kleisli
-import org.http4s.implicits._
-import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.{ Request, Response }
-import scalaz.metrics.DropwizardMetrics
-import scalaz.zio.{ TaskR, ZIO }
+import scalaz.metrics.Metrics
+import scalaz.zio.{ Task, TaskR, ZIO }
 import scalaz.zio.clock.Clock
 import scalaz.zio.interop.catz._
 import scalaz.zio.scheduler.Scheduler
@@ -18,22 +16,24 @@ object Server {
   type HttpEnvironment = Clock with Scheduler
   type HttpTask[A]     = TaskR[HttpEnvironment, A]
 
-  type HttpApp = DropwizardMetrics => Kleisli[HttpTask, Request[HttpTask], Response[HttpTask]]
+  type KleisliApp = Kleisli[HttpTask, Request[HttpTask], Response[HttpTask]]
 
-  val httpApp: HttpApp =
-    (metrics: DropwizardMetrics) =>
+  type HttpApp[Ctx] = Metrics[Task[?], Ctx] => KleisliApp
+
+  /*def httpApp[M: Metrics[Task[?], Ctx], Ctx]: HttpApp[Ctx] =
+    (metrics: M) =>
       Router(
         "/"        -> StaticService.service,
-        "/metrics" -> DropwizardMetricsService.service(metrics)
-      ).orNotFound
+        "/metrics" -> dropwizardMetricsService.service(metrics)
+      ).orNotFound*/
 
-  val builder: (HttpApp, DropwizardMetrics) => HttpTask[Unit] = (app: HttpApp, metrics: DropwizardMetrics) =>
+  def builder[Ctx]: KleisliApp => HttpTask[Unit] = (app: Kleisli[HttpTask, Request[HttpTask], Response[HttpTask]]) =>
     ZIO
       .runtime[HttpEnvironment]
       .flatMap { implicit rts =>
         BlazeServerBuilder[HttpTask]
           .bindHttp(port)
-          .withHttpApp(app(metrics))
+          .withHttpApp(app)
           .serve
           .compile
           .drain

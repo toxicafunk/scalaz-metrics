@@ -10,7 +10,7 @@ object DropwizardTests extends DefaultRuntime {
 
   val testCounter: Task[Unit] = for {
     f <- dropwizardMetrics.counter(Label(Array("test", "counter")))
-    a <- f(1)
+    _ <- f(1)
     b <- f(2)
   } yield b
 
@@ -29,20 +29,20 @@ object DropwizardTests extends DefaultRuntime {
             Thread.sleep(1400L),
             Thread.sleep(1200L)
           )
-        )(a => t.stop(t1))
+        )(_ => t.stop(t1))
   } yield l
 
   val testHistogram: Task[Unit] = {
     import scala.math.Numeric.IntIsIntegral
     for {
       h <- dropwizardMetrics.histogram(Label(Array("test", "histogram")))
-      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
+      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.unit)
     } yield ()
   }
 
   val testMeter: Task[Unit] = for {
     m <- dropwizardMetrics.meter(Label(Array("test", "meter")))
-    _ <- IO.foreach(1 to 5)(i => IO.succeed(m(1)))
+    _ <- IO.foreach(1 to 5)(_ => IO.succeed(m(1)))
   } yield ()
 
   def tests[T](harness: Harness[T]): T = {
@@ -58,7 +58,7 @@ object DropwizardTests extends DefaultRuntime {
         assert(counter == 3)
       },
       test("gauge returns latest value") { () =>
-        val tester: Option[Unit] => Long = (op: Option[Unit]) => System.nanoTime()
+        val tester: Option[Unit] => Long = (op: Option[Unit]) => op.map(_ => System.nanoTime()).get
         unsafeRun(testGauge(tester))
         val a1 = dropwizardMetrics.registry
           .getGauges()

@@ -14,14 +14,14 @@ object PrometheusTests extends DefaultRuntime {
 
   val testCounter: Task[Unit] = for {
     f <- prometheusMetrics.counter(Label(Array("test", "counter"), ""))
-    a <- f(1)
+    _ <- f(1)
     b <- f(2)
   } yield b
 
   val testGauge: (Option[Double] => Double) => Task[Unit] = (f: Option[Double] => Double) =>
     for {
       g <- prometheusMetrics.gauge[Double, Double, String](Label(Array("test", "gauge"), ""))(f)
-      a <- g(5.0.some)
+      _ <- g(5.0.some)
       b <- g((-3.0).some)
     } yield b
 
@@ -34,14 +34,14 @@ object PrometheusTests extends DefaultRuntime {
             Thread.sleep(1400L),
             Thread.sleep(1200L)
           )
-        )(a => t.stop(t1))
+        )(_ => t.stop(t1))
   } yield l
 
   val testHistogram: Task[Unit] = {
     import scala.math.Numeric.IntIsIntegral
     for {
       h <- prometheusMetrics.histogram(Label(Array("test", "hist"), ""))
-      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.void)
+      _ <- IO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.unit)
     } yield ()
   }
 
@@ -51,14 +51,14 @@ object PrometheusTests extends DefaultRuntime {
       h <- prometheusMetrics.histogramTimer(Label(Array("test", "tid"), ""))
       _ <- IO.foreach(List(h(), h(), h(), h(), h()))(io => {
             Thread.sleep(500)
-            io.void
+            io.unit
           })
     } yield ()
   }
 
   val testMeter: Task[Unit] = for {
     m <- prometheusMetrics.meter(Label(Array("test", "meter"), ""))
-    _ <- IO.foreach(1 to 5)(i => IO.succeed(m(2)))
+    _ <- IO.foreach(1 to 5)(_ => IO.succeed(m(2)))
   } yield ()
 
   def tests[T](harness: Harness[T]): T = {
