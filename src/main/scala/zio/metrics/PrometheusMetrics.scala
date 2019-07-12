@@ -1,11 +1,11 @@
-package scalaz.metrics
+package zio.metrics
 
 import java.io.IOException
 
 import io.prometheus.client._
-import scalaz.metrics.Label._
-import scalaz.metrics.Reservoir.{ Bounded, Config, ExponentiallyDecaying, Uniform }
-import scalaz.zio.{ IO, Task, UIO }
+import zio.metrics.Label._
+import zio.metrics.Reservoir.{ Bounded, Config, ExponentiallyDecaying, Uniform }
+import zio.{ IO, Task, UIO }
 import scalaz.{ Semigroup, Show }
 
 class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
@@ -17,6 +17,7 @@ class PrometheusMetrics extends Metrics[Task[?], Summary.Timer] {
     val c = Counter
       .build()
       .name(lbl)
+      //.labelNames(label.labels.map(Show[L].shows(_)): _*)
       .help(s"$lbl counter")
       .register()
     IO.effect { l: Long =>

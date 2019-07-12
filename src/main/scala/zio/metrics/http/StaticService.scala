@@ -1,13 +1,13 @@
-package scalaz.metrics.http
+package zio.metrics.http
 
 import java.io.File
 import java.util.concurrent.Executors
 
 import org.http4s._
 import org.http4s.dsl.io._
-import scalaz.zio.clock.Clock
-import scalaz.zio.interop.catz._
-import scalaz.metrics.http.Server._
+import zio.clock.Clock
+import zio.interop.catz._
+import zio.metrics.http.Server._
 
 import scala.concurrent.{ ExecutionContext, ExecutionContextExecutorService }
 

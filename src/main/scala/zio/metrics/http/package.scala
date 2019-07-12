@@ -1,4 +1,4 @@
-package scalaz.metrics
+package zio.metrics
 
 import argonaut.Argonaut.jEmptyObject
 import argonaut.Json

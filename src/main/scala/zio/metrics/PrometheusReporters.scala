@@ -1,36 +1,12 @@
-package scalaz.metrics
+package zio.metrics
 import argonaut.Argonaut._
 import argonaut.Json
 import io.prometheus.client.Summary
-import scalaz.{ Foldable, Monoid }
 import java.util
 
 import scala.collection.JavaConverters._
 
 object PrometheusReporters {
-
-  implicit val prometheusReportPrinter: ReportPrinter[Summary.Timer, PrometheusMetrics] =
-    new ReportPrinter[Summary.Timer, PrometheusMetrics] {
-      override def report[F[_], A](metrics: PrometheusMetrics, filter: Option[String])(
-        cons: (String, A) => A
-      )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[Summary.Timer, PrometheusMetrics, F, A]): A = {
-
-        import scalaz.syntax.semigroup._
-
-        val fs = List(
-          ("counters", R.extractCounters),
-          ("gauges", R.extractGauges),
-          ("timers", R.extractTimers),
-          ("histograms", R.extractHistograms),
-          ("meters", R.extractMeters)
-        )
-
-        fs.foldLeft(M.zero)((acc0, f) => {
-          val m = f._2(metrics)(filter)
-          acc0 |+| L.foldMap(m)(a => cons(f._1, a))
-        })
-      }
-    }
 
   val metricFamily2Json: (PrometheusMetrics, util.Set[String]) => List[Json] =
     (metrics: PrometheusMetrics, filter: util.Set[String]) => {

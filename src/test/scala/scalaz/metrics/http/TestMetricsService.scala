@@ -1,4 +1,4 @@
-package scalaz.metrics.http
+package zio.metrics.http
 
 import argonaut.Argonaut._
 import org.http4s.argonaut._
@@ -6,9 +6,9 @@ import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
 import org.http4s.{ HttpRoutes, Response }
 import scalaz.Scalaz._
-import scalaz.metrics.{ Label, Metrics }
-import scalaz.zio.interop.catz._
-import scalaz.zio.{ Task, TaskR, ZIO }
+import zio.metrics.{ Label, Metrics }
+import zio.interop.catz._
+import zio.{ Task, TaskR, ZIO }
 import Server._
 
 import scala.math.Numeric.IntIsIntegral
@@ -17,18 +17,18 @@ object TestMetricsService {
   println("Serving")
 
   val s: Stream[Int]                     = Stream.from(1)
-  val tester: Option[Int] => Stream[Int] = (_: Option[Int]) => s.takeWhile(_ < 10)
+  val tester: Option[Int] => Int =
+    (opt: Option[Int]) => opt.map(i => s.takeWhile(_ < i).fold(1)((i,j) => i*j)).get
 
   //def performTests[Ctx](metrics: Metrics[Task[?], Ctx]): Task[String] =
   def performTests[Ctx](metrics: Metrics[Task[?], Ctx]): HttpTask[String] =
     for {
-      f <- metrics.counter(Label(Array("test", "counter"), "_"))
+      f <- metrics.counter(Label("simple_counter", Array("test", "counter"), "_"))
       _ <- f(1)
       _ <- f(2)
-      g <- metrics.gauge(Label(Array("test", "gauge"), "_"))(tester)
-      _ <- g(2.some)
-      //_ <- g(8.some)
-      t  <- metrics.timer(Label(Array("test", "timer"), "_"))
+      g <- metrics.gauge(Label("simple_gauge", Array("test", "gauge"), "_"))(tester)
+      _ <- g(10.some)
+      t  <- metrics.timer(Label("simple_timer", Array("test", "timer"), "_"))
       t1 = t.start
       l <- ZIO.foreachPar(
             List(
@@ -37,10 +37,10 @@ object TestMetricsService {
               Thread.sleep(1200L)
             )
           )(_ => t.stop(t1))
-      h <- metrics.histogram(Label(Array("test", "histogram"), "_"))
+      h <- metrics.histogram(Label("simple_histogram", Array("test", "histogram"), "_"))
       _ <- ZIO.foreach(List(h(10), h(25), h(50), h(57), h(19)))(_.unit)
-      m <- metrics.meter(Label(Array("test", "meter"), "_"))
-      _ <- ZIO.foreach(1 to 5)(i => ZIO.succeed(m(i.toDouble)))
+      m <- metrics.meter(Label("simple_meter", Array("test", "meter"), "_"))
+      _ <- ZIO.foreach(List(1.0, 2.0, 3.0, 4.0, 5.0))(d => m(d))
     } yield { s"time $l ns" }
 
   def service[Ctx] =
@@ -51,7 +51,6 @@ object TestMetricsService {
             t => jSingleObject("error", jString(s"failure encountered $t")),
             s => jSingleObject("time", jString(s))
           )
-          //TaskR(Response[HttpTask](Ok).withEntity(m))
           m.flatMap(j => TaskR(Response[HttpTask](Ok).withEntity(j)))
       }
 }

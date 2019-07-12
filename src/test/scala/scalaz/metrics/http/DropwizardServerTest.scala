@@ -1,16 +1,21 @@
-package scalaz.metrics.http
+package zio.metrics.http
 
 import com.codahale.metrics.jmx.JmxReporter
 import org.http4s.implicits._
 import org.http4s.server.Router
-import scalaz.metrics.DropwizardMetrics
-import scalaz.metrics.http.MetricsService.dropwizardMetricsService
-import scalaz.metrics.http.Server._
-import scalaz.zio.interop.catz._
-import scalaz.zio.App
-import scalaz.zio.interop.catz.taskEffectInstances
+import zio.metrics.DropwizardMetrics
+import zio.metrics.http.MetricsService.dropwizardMetricsService
+import zio.metrics.http.Server._
+import zio.interop.catz._
+import zio.interop.catz.taskEffectInstances
 
 import scala.util.Properties.envOrNone
+import zio.system.System
+import zio.clock.Clock
+import zio.console.Console
+import zio.random.Random
+import zio.blocking.Blocking
+import zio.App
 
 object DropwizardServerTest extends App {
   val port: Int = envOrNone("HTTP_PORT").fold(9090)(_.toInt)
@@ -29,5 +34,17 @@ object DropwizardServerTest extends App {
         "/measure" -> TestMetricsService.service(metrics)
       ).orNotFound
 
-  override def run(args: List[String]) = builder(httpApp(metrics)).run.map(_ => 0)
+  override def run(args: List[String]) = {
+    builder(httpApp(metrics))
+        .provideSome[HttpEnvironment] { rt =>
+          new Clock with Console with System with Random with Blocking {
+            override val clock: Clock.Service[Any] = rt.clock
+            //override val scheduler: Scheduler.Service[Any] = rt.scheduler
+            override val console: Console.Service[Any] = rt.console
+            override val random: Random.Service[Any] = rt.random
+            override val system: System.Service[Any] = rt.system
+            override val blocking: Blocking.Service[Any] = rt.blocking
+          }
+        }.run.map(_ => 0)
+  }
 }

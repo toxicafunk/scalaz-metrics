@@ -1,4 +1,4 @@
-package scalaz.metrics
+package zio.metrics
 
 //import javax.management.openmbean.OpenType
 import scalaz.{ Semigroup, Show }
@@ -24,14 +24,14 @@ trait HtmlRender[A] {
   def render(a: A): String
 }
 
-class Label[A: Show](val labels: Array[A], val sep: String)
+case class Label[A: Show](name: A, labels: Array[A], val sep: String)
 
 object Label {
-  def apply[A: Show](arr: Array[A], sep: String = ".") = new Label(arr, sep)
+  def apply[A: Show](name: A, arr: Array[A], sep: String = ".") =
+    new Label(name, arr, sep)
 
-  implicit def showInstance[A: Show]: Show[Label[A]] = new Show[Label[A]] {
-    override def shows(l: Label[A]): String =
-      l.labels.mkString(l.sep)
+  implicit def labelShow[A: Show]: Show[Label[A]] = new Show[Label[A]] {
+    override def shows(l: Label[A]): String =s"${l.name}"
   }
 }
 

@@ -1,4 +1,4 @@
-package scalaz.metrics
+package zio.metrics
 import java.math.BigInteger
 import java.util.Date
 

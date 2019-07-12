@@ -1,11 +1,11 @@
-package scalaz.metrics
+package zio.metrics
 
 import com.codahale.metrics.MetricRegistry.MetricSupplier
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{ Reservoir => DWReservoir, _ }
-import scalaz.metrics.Label._
-import scalaz.metrics.Reservoir._
-import scalaz.zio.{ Task, UIO, ZIO }
+import zio.metrics.Label._
+import zio.metrics.Reservoir._
+import zio.{ Task, UIO, ZIO }
 import scalaz.{ Semigroup, Show }
 
 class DropwizardMetrics extends Metrics[Task[?], Context] {

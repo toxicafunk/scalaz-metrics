@@ -4,8 +4,9 @@ organization in ThisBuild := "org.scalaz"
 
 version in ThisBuild := "0.1.0-SNAPSHOT"
 
-val http4sVersion = "0.20.0-M5"
-val zioVersion    = "1.0-RC4"
+val http4sVersion  = "0.20.0-M5"
+val zioVersion     = "1.0.0-RC9"
+val interopVersion = "1.0.0-RC8-10"
 
 publishTo in ThisBuild := {
   val nexus = "https://oss.sonatype.org/"
@@ -35,9 +36,9 @@ lazy val root =
 
 libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core"                 % "7.2.27",
-  "org.scalaz" %% "scalaz-zio"                  % zioVersion,
-  "org.scalaz" %% "scalaz-zio-interop-cats"     % zioVersion,
-  "org.scalaz" %% "scalaz-zio-interop-scalaz7x" % zioVersion,
+  "dev.zio" %% "zio"                  % zioVersion,
+  "dev.zio" %% "zio-interop-cats"     % interopVersion,
+  "dev.zio" %% "zio-interop-scalaz7x" % interopVersion,
   "org.scalaz" %% "testz-core"                  % "0.0.5",
   "org.scalaz" %% "testz-stdlib"                % "0.0.5"
 )
@@ -67,7 +68,7 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 
 resolvers += Resolver.sonatypeRepo("releases")
 
-scalacOptions ++= Seq("-Ypartial-unification")
+scalacOptions ++= Seq("-Ypartial-unification", "-Ywarn-value-discard")
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7")
 

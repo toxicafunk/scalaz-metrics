@@ -1,36 +1,12 @@
-package scalaz.metrics
+package zio.metrics
 import argonaut.Argonaut.{ jNumber, jSingleObject, jString }
 import argonaut.{ Json, _ }
 import com.codahale.metrics.Snapshot
 import com.codahale.metrics.Timer.Context
-import scalaz.{ Foldable, Monoid }
 
 import scala.collection.JavaConverters._
 
 object DropwizardReporters {
-
-  implicit val dropwizardReportPrinter: ReportPrinter[Context, DropwizardMetrics] =
-    new ReportPrinter[Context, DropwizardMetrics] {
-      override def report[F[_], A](metrics: DropwizardMetrics, filter: Option[String])(
-        cons: (String, A) => A
-      )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[Context, DropwizardMetrics, F, A]): A = {
-
-        import scalaz.syntax.semigroup._
-
-        val fs = List(
-          ("counters", R.extractCounters),
-          ("gauges", R.extractGauges),
-          ("timers", R.extractTimers),
-          ("histograms", R.extractHistograms),
-          ("meters", R.extractMeters)
-        )
-
-        fs.foldLeft(M.zero)((acc0, f) => {
-          val m = f._2(metrics)(filter)
-          acc0 |+| L.foldMap(m)(a => cons(f._1, a))
-        })
-      }
-    }
 
   implicit val jsonDWReporter: Reporter[Context, DropwizardMetrics, List, Json] =
     new Reporter[Context, DropwizardMetrics, List, Json] {
