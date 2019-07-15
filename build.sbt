@@ -5,6 +5,7 @@ organization in ThisBuild := "org.scalaz"
 version in ThisBuild := "0.1.0-SNAPSHOT"
 
 val http4sVersion  = "0.20.0-M5"
+//val zioVersion     = "1.0.0-RC10-1"
 val zioVersion     = "1.0.0-RC9"
 val interopVersion = "1.0.0-RC8-10"
 

@@ -28,7 +28,7 @@ object PrometheusReporters {
         (metrics: PrometheusMetrics) =>
           (filter: Filter) => {
             val set: util.Set[String] = new util.HashSet[String]()
-            set.add(filter.getOrElse("test_counter"))
+            set.add(filter.getOrElse("simple_counter"))
             metricFamily2Json(metrics, set)
           }
 
@@ -36,7 +36,7 @@ object PrometheusReporters {
         (metrics: PrometheusMetrics) =>
           (filter: Filter) => {
             val set: util.Set[String] = new util.HashSet[String]()
-            set.add(filter.getOrElse("test_gauge"))
+            set.add(filter.getOrElse("simple_gauge"))
             metricFamily2Json(metrics, set)
           }
 
@@ -44,9 +44,9 @@ object PrometheusReporters {
         (metrics: PrometheusMetrics) =>
           (filter: Filter) => {
             val set: util.Set[String] = new util.HashSet[String]()
-            set.add(filter.getOrElse("test_timer"))
-            set.add(filter.getOrElse("test_timer_count"))
-            set.add(filter.getOrElse("test_timer_sum"))
+            set.add(filter.getOrElse("simple_timer"))
+            set.add(filter.getOrElse("simple_timer_count"))
+            set.add(filter.getOrElse("simple_timer_sum"))
             metricFamily2Json(metrics, set)
           }
 
@@ -54,10 +54,10 @@ object PrometheusReporters {
         (metrics: PrometheusMetrics) =>
           (filter: Filter) => {
             val set: util.Set[String] = new util.HashSet[String]()
-            set.add(filter.getOrElse("test_histogram"))
-            set.add(filter.getOrElse("test_histogram_count"))
-            set.add(filter.getOrElse("test_histogram_sum"))
-            set.add(filter.getOrElse("test_histogram_bucket"))
+            set.add(filter.getOrElse("simple_histogram"))
+            set.add(filter.getOrElse("simple_histogram_count"))
+            set.add(filter.getOrElse("simple_histogram_sum"))
+            set.add(filter.getOrElse("simple_histogram_bucket"))
             metricFamily2Json(metrics, set)
           }
 
@@ -65,9 +65,9 @@ object PrometheusReporters {
         (metrics: PrometheusMetrics) =>
           (filter: Filter) => {
             val set: util.Set[String] = new util.HashSet[String]()
-            set.add(filter.getOrElse("test_meter"))
-            set.add(filter.getOrElse("test_meter_count"))
-            set.add(filter.getOrElse("test_meter_sum"))
+            set.add(filter.getOrElse("simple_meter"))
+            set.add(filter.getOrElse("simple_meter_count"))
+            set.add(filter.getOrElse("simple_meter_sum"))
             metricFamily2Json(metrics, set)
           }
     }

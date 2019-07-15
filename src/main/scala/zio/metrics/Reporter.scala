@@ -22,7 +22,7 @@ class ReportPrinter[Ctx, M <: Metrics[Task[?], Ctx]] {
   )(implicit M: Monoid[A], L: Foldable[F], R: Reporter[Ctx, M, F, A]): A = {
      import scalaz.syntax.semigroup._
 
-        val fs = List(
+        val fs = Seq(
           ("counters", R.extractCounters),
           ("gauges", R.extractGauges),
           ("timers", R.extractTimers),
