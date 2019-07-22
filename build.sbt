@@ -1,6 +1,16 @@
-import Scalaz._
+import Build._
 
-organization in ThisBuild := "org.scalaz"
+addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
+addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
+
+pgpPublicRing := file("/tmp/public.asc")
+pgpSecretRing := file("/tmp/secret.asc")
+releaseEarlyWith := SonatypePublisher
+scmInfo := Some(
+  ScmInfo(url("https://github.com/zio/zio-metrics/"), "scm:git:git@github.com:zio/zio-metrics.git")
+)
+
+organization in ThisBuild := "dev.zio"
 
 version in ThisBuild := "0.1.0-SNAPSHOT"
 
