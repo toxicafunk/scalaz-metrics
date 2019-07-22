@@ -4,7 +4,6 @@ import scalaz.Scalaz._
 import zio.{ App, IO, Task }
 
 import scala.math.Numeric.IntIsIntegral
-import zio.DefaultRuntime
 
 object DropwizardMetricsSpec extends App {
 
